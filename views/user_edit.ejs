@@ -14,12 +14,29 @@
 	    	<label for="username">用户名</label>
 	    	<input type="text" id="username" name="username" value="<%= edited_user.username %>"<% if (!user.allowedManage) { %> readonly<% } %>>
       </div>
-      <% if (user.allowedManage) { %>
-        <div class="field">
-          <label for="nameplate">Nameplate</label>
-          <input type="text" id="nameplate" name="nameplate" value="<%= edited_user.nameplate %>">
-        </div>
+      <% if (edited_user.is_admin || edited_user.privileges.includes('manage_problem_tag') || edited_user.privileges.includes('manage_problem') || edited_user.privileges.includes('manage_user') ) { %>
+      <div class="field">
+		<label for="tagname">标签名</label>
+		<input type="text" id="tagname" name="tagname" value="<%= edited_user.tg_name %>"<% if (!user.allowedManage) { %> readonly<% } %>>
+      </div>
+      <div class="field">
+          <label for="tagcolor">标签颜色</label>
+          <div class="ui fluid selection dropdown" id="tagcolor">
+            <input type="hidden" name="tagcolor" value="<%= edited_user.tg_color %>">
+            <i class="dropdown icon"></i>
+            <div class="default text">选择颜色</div>
+            <div class="menu">
+              <% for (let color of syzoj.config.problem_tag_colors) { %>
+                <div class="item" data-value="<%= color %>">
+                  <div class="ui <%= color %> empty circular label"></div>
+                  <%= color.split('').map((a, i) => i ? a : a.toUpperCase()).join('') %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+      </div>
       <% } %>
+      
       <div class="field">
 	    	<label for="sex">性别</label>
 	    	<select class="ui dropdown" name="sex">

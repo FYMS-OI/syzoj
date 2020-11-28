@@ -337,7 +337,8 @@ app.post('/user/:id/edit', async (req, res) => {
     let allowedManage = await res.locals.user.hasPrivilege('manage_user');
 
     if (allowedManage) {
-      user.nameplate = req.body.nameplate;
+      user.tg_color = req.body.tagcolor;
+      user.tg_name = req.body.tagname;
     }
 
     user.information = req.body.information;
