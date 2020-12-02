@@ -6,6 +6,7 @@ let Problem = syzoj.model('problem');
 
 const jwt = require('jsonwebtoken');
 const { getSubmissionInfo, getRoughResult, processOverallResult } = require('../libs/submissions_process');
+const hljs = require('highlight.js');
 
 const displayConfig = {
   showScore: true,
@@ -183,10 +184,12 @@ app.get('/submission/:id', app.useRestriction, async (req, res) => {
         });
 
         if (formattedCode) {
-          judge.formattedCode = await syzoj.utils.highlight(formattedCode.code, syzoj.languages[judge.language].highlight);
+        //   judge.formattedCode = await syzoj.utils.highlight(formattedCode.code, syzoj.languages[judge.language].highlight);
+          judge.formattedCode = hljs.highlightAuto(formattedCode.code).value;
         }
       }
-      judge.code = await syzoj.utils.highlight(judge.code, syzoj.languages[judge.language].highlight);
+    //   judge.code = await syzoj.utils.highlight(judge.code, syzoj.languages[judge.language].highlight);
+      judge.code = hljs.highlightAuto(judge.code).value;
     }
 
     displayConfig.showRejudge = await judge.problem.isAllowedEditBy(res.locals.user);
