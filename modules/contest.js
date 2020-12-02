@@ -490,12 +490,14 @@ app.get('/contest/submission/:id', app.useRestriction, async (req, res) => {
       if (key) {
         let formattedCode = await FormattedCode.findOne({ where: { key } });
         if (formattedCode) {
-          judge.formattedCode = await syzoj.utils.highlight(formattedCode.code, syzoj.languages[judge.language].highlight);
+        //   judge.formattedCode = await syzoj.utils.highlight(formattedCode.code, syzoj.languages[judge.language].highlight);
+          judge.formattedCode = hljs.highlight(syzoj.languages[judge.language].highlight, formattedCode.code).value;
         }
       }
 
       judge.codeLength = Buffer.from(judge.code).length;
-      judge.code = await syzoj.utils.highlight(judge.code, syzoj.languages[judge.language].highlight);
+			// judge.code = await syzoj.utils.highlight(judge.code, syzoj.languages[judge.language].highlight);
+			judge.code = hljs.highlight(syzoj.languages[judge.language].highlight, judge.code).value;
     }
 
     res.render('submission', {

@@ -7,12 +7,14 @@
 }
 </style>
 <script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.4.0/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 <div class="padding">
   <% include discussion_breadcrumb %>
   <h1><%= article.title %></h1>
  	<p style="margin-bottom: -5px; ">
 	<img style="vertical-align: middle; margin-bottom: 2px; margin-right: 2px; " src="<%= syzoj.utils.gravatar(article.user.email, 34) %>" width="17" height="17">
-	<b style="margin-right: 30px; "><a class="black-link" href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a><% if (article.user.nameplate) { %><%- article.user.nameplate %><% } %></b>
+	<b style="margin-right: 30px; "><a class="black-link" href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a></b>
 	<b style="margin-right: 30px; "><i class="calendar icon"></i> <%= syzoj.utils.formatDate(article.public_time) %></b>
   <% if (article.public_time !== article.update_time) { %><b style="margin-right: 30px; "><i class="edit icon"></i> <%= syzoj.utils.formatDate(article.update_time) %></b><% } %>
   <b style="margin-right: 30px; "><i class="eye icon"></i> <%= article.views %></b>
