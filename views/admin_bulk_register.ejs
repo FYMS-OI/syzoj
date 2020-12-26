@@ -1,0 +1,262 @@
+<% this.adminPage = 'bulk_register'; %>
+<% include admin_header %>
+
+<div>
+  <div class="ui message" id="message" data-am-alert hidden>
+    <p id="message_info"></p>
+  </div>
+  <div class="ui top attached tabular menu">
+    <a class="item active" data-tab="edit">编辑参数</a>
+    <a class="item" data-tab="preview">预览结果</a>
+  </div>
+  <div class="ui bottom attached segment">
+    <div class="ui tab active" data-tab="edit">
+      <div class="ui form">
+        <div class="field">
+          <label>用户名格式（用 # 表示插入编号，至少出现一个 #）</label>
+          <input name="username" type="text" value="" required>
+        </div>
+        <div class="three fields">
+          <div class="field">
+            <label>编号范围（最小值）</label>
+            <input name="number_min" type="number" min="0" max="999999" step="1" value="" required>
+          </div>
+          <div class="field">
+            <label>编号范围（最大值）</label>
+            <input name="number_max" type="number" min="0" max="999999" step="1" value="" required>
+          </div>
+          <div class="field">
+            <label>编号位数（不足自动补零）</label>
+            <input name="number_length" type="number" min="0" max="6" step="1" value="" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>邮箱（用 # 表示插入编号）</label>
+          <input name="email" type="text" value="" required>
+        </div>
+        <div class="field">
+          <label>初始密码（用 # 表示插入编号，* 表示随机字母数字）</label>
+          <input name="password" type="text" value="" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="ui tab" data-tab="preview">
+      <div style="text-align: center;">
+        <a id="btn_export" class="ui button" href="javascript:void(0);">导出用户数据</a>
+        <a id="btn_submit" class="ui button" href="javascript:void(0);">确认批量注册</a>
+      </div>
+      <table id="preview" class="ui very basic center aligned table">
+        <thead>
+          <tr>
+            <th>用户名</th>
+            <th>邮箱</th>
+            <th>初始密码</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="<%- lib('blueimp-md5/2.10.0/js/md5.min.js') %>"></script>
+
+<script id="export-template" type="text/template">
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style type="text/css">
+      th, td {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <table border="1" frame="box" rules="all" cellpadding="0" callspacing="0">
+      <thead>
+        <tr>
+          <th>用户名</th>
+          <th>邮箱</th>
+          <th>初始密码</th>
+        </tr>
+      </thead>
+      <tbody>
+{{ content }}
+      </tbody>
+    </table>
+  </body>
+</html>
+</script>
+<script type="text/javascript">
+  var lastType = null;
+  function show_message(message, type) {
+    var $message = $('#message');
+    if (!message) {
+      if ($message.is(':visible')) {
+        $message.transition('scale');
+      }
+      return;
+    }
+    $("#message_info").text(message);
+    if (type !== lastType) {
+      if (lastType) $message.removeClass(lastType);
+      $message.addClass(type);
+      lastType = type;
+    }
+    if ($message.is(':visible')) {
+      $message.transition('pulse');
+    } else {
+      $message.transition('scale');
+    }
+  }
+  function download_file(filename, content, mimeType) {
+    var blob = new Blob([content]);
+    var url = URL.createObjectURL(blob, { type: mimeType });
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function escape_html(str) {
+    return $('<span>').text(str).html();
+  }
+  function compile_template(template, options) {
+    return template.replace(/\{\{\s*[^}\s]+\s*\}\}/g, function(str) {
+      var param = str.slice(2, -2).trim();
+      return param in options ? options[param] : '';
+    });
+  }
+  var random_charset = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  function random_char() {
+    return random_charset.charAt(Math.floor(Math.random() * random_charset.length));
+  }
+
+  function get_input() {
+    var result = {};
+    var $inputs = $('.ui.form input[name]');
+    for (var i = 0; i < $inputs.length; ++i) {
+      var input = $inputs.get(i);
+      if (input.required && !input.value) {
+        input.focus();
+        throw new Error("请填写字段");
+      }
+      result[input.name] = input.value;
+    }
+    return result;
+  }
+  function generate_data(options) {
+    var reNumber = /#/g;
+    var reRandom = /\*/g;
+    if (options.username.match(reNumber).length < 1) throw new Error("用户名格式错误");
+    var l = parseInt(options.number_min),
+        r = parseInt(options.number_max),
+        len = parseInt(options.number_length);
+    if (l > r) throw new Error("编号范围有误");
+    var data = [];
+    for (let i = l; i <= r; ++i) {
+      var str = i.toString();
+      while (str.length < len) str = '0' + str;
+      data.push({
+        username: options.username.replace(reNumber, str),
+        email: options.email.replace(reNumber, str),
+        password: options.password.replace(reNumber, str)
+                    .replace(reRandom, random_char)
+      });
+    }
+    return data;
+  }
+  function show_preview(data) {
+    var $table = $('#preview');
+    $table.show();
+    $table.find('tbody').html('');
+    data.forEach(function(a) {
+      $table.append($('<tr>')
+        .append($('<td>').text(a.username))
+        .append($('<td>').text(a.email))
+        .append($('<td>').text(a.password))
+      );
+    });
+  }
+  function export_data(data) {
+    var content = data.map(function(a) {
+      var cells = [a.username, a.email, a.password];
+      return '          <tr>\n' + cells.map(function(str) {
+        return '            <td>' + escape_html(str) + '</td>\n';
+      }).join('') + '          </tr>\n';
+    }).join('');
+    var html = compile_template($('#export-template').html(), { content: content });
+    download_file("users.xls", html.replace(/\n/g, '\r\n'), "application/vnd.ms-excel");
+  }
+  function submit(data) {
+    var $btn = $("#btn_submit");
+    $btn.addClass("loading disabled");
+    var submitData = data.map(function(a) {
+      return {
+        username: a.username,
+        email: a.email,
+        password: md5(a.password + 'syzoj2_xxx')
+      };
+    });
+    $.ajax({
+      method: 'POST',
+      url: '/admin/bulk_register',
+      data: {
+        users: submitData
+      },
+      success: function(data) {
+        if (data.error) {
+          show_message(data.error, "error");
+        } else {
+          show_message("批量注册成功！", "positive")
+        }
+        $btn.removeClass("loading disabled");
+      },
+      error: function(XMLHttpRequest, textStatus, errorThrown) {
+        alert(XMLHttpRequest.responseText);
+        show_message("未知错误", "error");
+        $btn.removeClass("loading disabled");
+      }
+    });
+  }
+
+  $(function() {
+    var options, data;
+    $('.tabular.menu .item').click(function() {
+      var $this = $(this);
+      var tabName = $this.attr('data-tab');
+      if (tabName === 'preview') {
+        try {
+          options = get_input();
+          data = generate_data(options);
+        } catch (err) {
+          show_message(err.message, 'error');
+          return;
+        }
+        show_message(null);
+        show_preview(data);
+      }
+      $this.addClass('active').siblings().removeClass('active');
+      $('.ui.tab').each(function(i, tab) {
+        var $tab = $(tab);
+        if ($tab.attr('data-tab') === tabName) {
+          $tab.addClass('active');
+        } else {
+          $tab.removeClass('active');
+        }
+      });
+    });
+    $('#btn_export').click(function() {
+      export_data(data);
+    });
+    $('#btn_submit').click(function() {
+      if (!confirm("此操作将会注册 " + data.length + " 个用户。是否继续？\n建议在批量注册前先导出用户信息。")) return;
+      submit(data);
+    });
+  });
+</script>
+
+<% include admin_footer %>

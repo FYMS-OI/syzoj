@@ -1,0 +1,41 @@
+<% this.title = '编辑标签' %>
+<% include header %>
+<div class="padding">
+  <form class="ui form" action="<%= syzoj.utils.makeUrl(['problems', 'tag', tag.id, 'edit']) %>" method="post">
+      <div class="field">
+          <label>标签名称</label>
+          <input type="text" name="name" value="<%= tag.name %>">
+      </div>
+      <div class="field">
+          <label>标签颜色</label>
+          <div class="ui fluid selection dropdown" id="tag_color">
+            <input type="hidden" name="color" value="<%= tag.color %>">
+            <i class="dropdown icon"></i>
+            <div class="default text">选择颜色</div>
+            <div class="menu">
+              <% for (let color of syzoj.config.problem_tag_colors) { %>
+                <div class="item" data-value="<%= color %>">
+                  <div class="ui <%= color %> empty circular label"></div>
+                  <%= color.split('').map((a, i) => i ? a : a.toUpperCase()).join('') %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+      </div>
+      <div style="text-align: center; ">
+      <% if (isNewTag) { %>
+      <a href="<%= syzoj.utils.makeUrl(['problems', 'tag', 'bulk_create']) %>" class="ui labeled icon button" style="margin-right: 2em;">
+        <i class="icon arrow right"></i> 批量添加标签
+      </a>
+      <% } %>
+      <button type="submit" class="ui labeled primary submit icon button">
+        <i class="icon edit"></i> 提交
+      </button>
+      </div>
+  </form>
+<script>
+$(function () {
+  $('#tag_color').dropdown();
+});
+</script>
+<% include footer %>

@@ -1,0 +1,117 @@
+<%
+  let title_parts;
+  let text_article, text_new_article;
+  if (forum === 'solutions') {
+    title_parts = ['题解'];
+    text_article = '题解';
+    text_new_article = '发表题解';
+  } else {
+    title_parts = ['讨论'];
+    text_article = '讨论';
+    text_new_article = '发帖';
+  }
+  if (problem) title_parts.push(problem.title);
+  this.title = title_parts.join(' - ');
+%>
+<% include discussion_util %>
+<%
+  const in_problems = syzoj.problem_forums.includes(forum) && !problem;
+
+  let url_new_article = null;
+  if (!in_problems && user) {
+    let params = { forum };
+    if (problem) params.problem_id = problem.id;
+    url_new_article = syzoj.utils.makeUrl(['article', 0, 'edit'], params);
+  }
+%>
+<% include header %>
+<div class="padding">
+  <div class="ui grid">
+    <div class="row" style="margin-bottom: 10px; ">
+      <div class="ten wide column">
+        <% include discussion_breadcrumb %>
+      </div>
+      <div class="six wide right aligned column">
+        <% if (problem) { %>
+          <a style="margin-left: 10px; " href="<%= get_problem_url() %>" class="ui labeled icon mini blue button">
+            <i class="arrow left icon"></i>
+            返回题目
+          </a>
+        <% } %>
+        <% if (articles.length && url_new_article) { %>
+          <a style="margin-left: 10px; " href="<%= url_new_article %>" class="ui labeled icon mini button">
+            <i class="write icon"></i>
+            <%= text_new_article %>
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <% if (articles.length) { %>
+  <table class="ui very basic center aligned table">
+    <thead>
+      <tr>
+        <th class="left aligned" style="width: 45%; ">标题</th>
+        <% if (in_problems) { %>
+          <th style="width: 20%; ">所属题目</th>
+        <% } %>
+        <th style="width: 10%; ">作者</th>
+        <th style="width: 3%; "><i class="eye icon"></i></th>
+        <th style="width: 3%; "><i class="comment icon"></i></th>
+        <th style="width: 3%; "><i class="thumbs up icon"></i></th>
+        <th style="width: 15%; ">最新回复</th>
+      </tr>
+    </thead>
+    <tbody>
+    <% for (let article of articles) { %>
+        <tr>
+            <td class="left aligned"><a href="<%= syzoj.utils.makeUrl(['article', article.id], is_contest && { contest_id: contest.id }) %>"><%= article.title %></a></td>
+            <% if (in_problems) { %>
+              <td><a href="<%= get_list_url(article.forum, article.problem.id) %>"><%= article.problem.title %></a></td>
+            <% } %>
+            <td><a href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a><% if (article.user.nameplate) { %><%- article.user.nameplate %><% } %></td>
+            <td><%= article.views %></td>
+            <td><%= article.comments_num %></td>
+            <td><%= article.vote_up %></td>
+            <td><%= syzoj.utils.formatDate(article.sort_time) %></td>
+        </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <style>
+    .stat-text {
+      display: inline-block;
+      position: relative;
+    }
+    .stat-label:not(:last-child) {
+      margin-right: .5em;
+    }
+    .stat-label>i.icon {
+      color: #666;
+    }
+  </style>
+  <script>
+    $(function () {
+      $('.stat-text').popup({
+        position: 'top center'
+      });
+    });
+  </script>
+  <br>
+  <% include page %>
+  <% } else { %>
+  <div class="ui placeholder segment">
+    <div class="ui icon header">
+      <i class="chat icon" style="margin-bottom: 20px; "></i>
+      暂无<%= text_article %>
+    </div>
+    <% if (url_new_article) { %>
+      <a href="<%= url_new_article %>" class="ui primary labeled icon button">
+        <i class="write icon"></i>
+        <%= text_new_article %>
+      </a>
+    <% } %>
+  </div>
+  <% } %>
+</div>
+<% include footer %>

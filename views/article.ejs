@@ -1,0 +1,174 @@
+<% this.title = [article.title, article.forum === 'solutions' ? '题解' : '帖子'].join(' - '); %>
+<% include discussion_util %>
+<% include header %>
+<style type="text/css" xmlns:style="http://www.w3.org/1999/xhtml">
+.small{
+  font-size: 0.7em;
+}
+</style>
+<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.4.0/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<div class="padding">
+  <% include discussion_breadcrumb %>
+  <h1><%= article.title %></h1>
+ 	<p style="margin-bottom: -5px; ">
+	<img style="vertical-align: middle; margin-bottom: 2px; margin-right: 2px; " src="<%= syzoj.utils.gravatar(article.user.email, 34) %>" width="17" height="17">
+	<b style="margin-right: 30px; "><a class="black-link" href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a></b>
+	<b style="margin-right: 30px; "><i class="calendar icon"></i> <%= syzoj.utils.formatDate(article.public_time) %></b>
+  <% if (article.public_time !== article.update_time) { %><b style="margin-right: 30px; "><i class="edit icon"></i> <%= syzoj.utils.formatDate(article.update_time) %></b><% } %>
+  <b style="margin-right: 30px; "><i class="eye icon"></i> <%= article.views %></b>
+    <% if (article.allowedEdit) { %>
+        <a style="margin-top: -4px; " class="ui mini right floated labeled icon button" href="<%= syzoj.utils.makeUrl(['article', article.id, 'edit']) %>"><i class="ui edit icon"></i>编辑</a>
+        <a style="margin-top: -4px; margin-right: 3px; " class="ui mini red right floated labeled icon button" onclick="$('#modal-delete').modal('show')"><i class="ui trash icon"></i>删除</a>
+        <% } %>
+        <% if (article.problem) { %>
+          <a style="margin-top: -4px; margin-right: 3px; " class="ui mini right floated labeled icon primary button" href="<%= get_problem_url() %>"><i class="ui left arrow icon"></i> 返回题目</a>
+        <% } %>
+ 	</p>
+  <div class="ui top attached existing segment">
+	  <div id="content" class="font-content"><%- article.rendered_content %></div>
+  </div>
+  <div class="ui bottom attached secondary segment" style="padding: .6em 1em;">
+    <div id="voteContainer">
+      <span>
+        <i class="ui thumbs up icon" :class="getVoteButtonClass(1)" @click="setVote(1)"></i>
+        <span class="count" style="margin-left: -.1em;">{{ vote && vote.total.up }}</span>
+      </span>
+      <span>
+        <i class="ui thumbs down icon" :class="getVoteButtonClass(-1)" @click="setVote(-1)"></i>
+      </span>
+    </div>
+    <style>
+      #voteContainer>span {
+        display: inline-block;
+        margin-right: .5em;
+      }
+    </style>
+    <script>
+      let articleVote = new Vue({
+        el: '#voteContainer',
+        data: {
+          article_id: <%- serializejs(article.id) %>,
+          enabled: <%- serializejs(user !== null) %>,
+          vote: null
+        },
+        mounted() {
+          this.init();
+        },
+        methods: {
+          getVoteButtonClass(value) {
+            const list = [];
+            if (this.enabled && this.vote) {
+              const self = this.vote.self;
+              list.push('link');
+              list.push(self === value ? 'blue' : 'grey');
+            } else {
+              list.push('grey');
+              list.push('disabled');
+            }
+            return list;
+          },
+          init() {
+            $.get(`/api/article/${this.article_id}/vote`, resp => {
+              if (resp.error) {
+                console.error(resp.error);
+              } else {
+                this.vote = resp.result;
+              }
+            });
+          },
+          setVote(vote) {
+            if (!this.enabled) return;
+            if (this.vote.self === vote) vote = 0;
+            $.post(`/api/article/${this.article_id}/vote/${vote}`, resp => {
+              if (resp.error) {
+                console.error(resp.error);
+              } else {
+                this.vote = resp.result;
+              }
+            });
+          }
+        }
+      })
+    </script>
+  </div>
+  <% if (comments.length) { %>
+  <div class="ui comments" style="max-width: none;">
+    <h3 class="ui dividing header">共 <%= commentsCount %> 条回复</h3>
+    <% for (let comment of comments) { %>
+      <div class="comment">
+        <a class="avatar">
+          <img src="<%= syzoj.utils.gravatar(comment.user.email, 120) %>">
+        </a>
+        <div class="content">
+          <a class="author" href="<%= syzoj.utils.makeUrl(['user', comment.user_id]) %>"><%= comment.user.username %></a><% if (comment.user.nameplate) { %><%- comment.user.nameplate %><% } %>
+          <div class="metadata">
+            <span class="date"><%= syzoj.utils.formatDate(comment.public_time) %></span>
+          </div>
+          <div class="text font-content" style="min-height: 19.5px; "><%- comment.rendered_content %></div>
+          <% if (comment.allowedEdit) { %>
+            <div class="actions"><a onclick="$('#modal-delete-<%= comment.id %>').modal('show')">删除</a></div>
+            <div class="ui basic modal" id="modal-delete-<%= comment.id %>">
+              <div class="ui icon header">
+                <i class="trash icon"></i>
+                <p style="margin-top: 15px; ">删除评论</p>
+              </div>
+              <div class="content" style="text-align: center; ">
+                <p>确认删除这条评论吗？</p>
+              </div>
+              <div class="actions">
+                <div class="ui red basic cancel inverted button">
+                  <i class="remove icon"></i>
+                  否
+                </div>
+                <a class="ui green ok inverted button" href-post="<%= syzoj.utils.makeUrl(['article', article.id, 'comment', comment.id, 'delete']) %>">
+                  <i class="checkmark icon"></i>
+                  是
+                </a>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+  <div style="margin-bottom: 50px; ">
+    <% include page %>
+  </div>
+  <% } %>
+    <% if (article.allowedComment) { %>
+    <form class="ui reply form" method="post" action="<%= syzoj.utils.makeUrl(['article', article.id, 'comment']) %>">
+      <div class="field">
+        <textarea name="comment" class="markdown-edit"></textarea>
+      </div>
+      <div style="text-align: center; ">
+      <button id="submit_button" type="submit" class="ui labeled submit icon button">
+        <i class="icon edit"></i> 回复
+      </button>
+      </div>
+    </form>
+  <% } %>
+  <% if (article.allowedEdit) { %>
+    <div class="ui basic modal" id="modal-delete">
+      <div class="ui icon header">
+        <i class="trash icon"></i>
+        <p style="margin-top: 15px; ">删除文章</p>
+      </div>
+      <div class="content" style="text-align: center; ">
+        <p>确认删除这篇文章吗？</p>
+      </div>
+      <div class="actions">
+        <div class="ui red basic cancel inverted button">
+          <i class="remove icon"></i>
+          否
+        </div>
+        <a class="ui green ok inverted button" href-post="<%= syzoj.utils.makeUrl(['article', article.id, 'delete']) %>">
+          <i class="checkmark icon"></i>
+          是
+        </a>
+      </div>
+    </div>
+  <% } %>
+</div>
+<% include footer %>

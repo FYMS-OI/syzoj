@@ -1,0 +1,164 @@
+<% this.title = '实名认证'; %>
+<% include header %>
+<div class="padding">
+	<div id="vueApp">
+    <div v-for="message of messages" :key="message.id" class="ui message" :class="message.type">
+      {{ message.content }}
+      <i class="close icon" @click="closeMessage(message)"></i>
+    </div>
+    <div class="ui form">
+      <div class="inline field">
+        <label>用户名</label>
+        <span>{{ user.username }}</span>
+      </div>
+      <div class="inline field">
+        <label>实名认证状态</label>
+        <user-verify-status-label :status="identity.status"></user-verify-status-label>
+      </div>
+      <div class="inline fields">
+        <label>角色</label>
+        <div class="field">
+          <div class="ui radio checkbox">
+            <input type="radio" value="student" v-model="identity.role" :readonly="!allowedEdit">
+            <label>学生</label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui radio checkbox">
+            <input type="radio" value="teacher" v-model="identity.role" :readonly="!allowedEdit">
+            <label>教师</label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui radio checkbox">
+            <input type="radio" value="other" v-model="identity.role" :readonly="!allowedEdit">
+            <label>其它</label>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="real_name">真实姓名</label>
+        <input type="text" id="real_name" v-model="identity.real_name" :readonly="!allowedEdit">
+      </div>
+      <template v-if="identity.role === 'student'">
+        <div class="field">
+          <label for="graduation_year">高中毕业年份</label>
+          <input type="number" id="graduation_year" v-model="identity.graduation_year" :readonly="!allowedEdit">
+        </div>
+        <div class="inline field">
+          <label>当前年级</label>
+          <span>
+            <template v-if="identity.graduation_year">
+              {{ GradeCalc.getGrade(identity.graduation_year) }}
+              <i class="help circle icon" title="根据高中毕业年份自动推算" style="margin-left: .5em; color: #aaa;"></i>
+            </template>
+            <template v-else>
+              未知
+            </template>
+          </span>
+        </div>
+      </template>
+      <template v-if="allowedManage && identity.status">
+        <div class="inline field">
+          <label>审核选项</label>
+          <a class="ui positive mini compact button" :class="{ disabled: identity.status === 'approved' }" @click="setStatus('approve')">
+            <i class="checkmark icon"></i> 通过
+          </a>
+          <a class="ui negative mini compact button" :class="{ disabled: identity.status === 'rejected' }" @click="setStatus('reject')">
+            <i class="remove icon"></i> 不通过
+          </a>
+        </div>
+      </template>
+    </div>
+    <div style="text-align: center; margin-top: 30px; ">
+      <button v-if="allowedEdit" class="ui blue labeled icon button" :class="{ disabled: !canSubmit, loading: submitting }" @click="submit()">
+        <i class="ui icon checkmark"></i> 提交
+      </button>
+      <a class="ui labeled icon button" :href="`/user/${user.id}/edit`">
+        <i class="ui icon arrow left"></i> 返回
+      </a>
+    </div>
+	</div>
+</div>
+
+<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="<%= syzoj.utils.makeUrl(['self', 'grade-calc.js']) %>"></script>
+
+<% include user_verify_status_label %>
+
+<script>
+  let app = new Vue({
+    el: '#vueApp',
+    data: {
+      messages: [],
+      submitting: false,
+      identity: <%- serializejs(identity.toJSON()) %>,
+      allowedManage: <%- serializejs(allowedManage) %>
+    },
+    mounted() {
+      $(() => {
+        $('.ui.radio.checkbox').checkbox();
+      });
+    },
+    computed: {
+      user() {
+        return this.identity.user;
+      },
+      allowedEdit() {
+        return this.identity.status !== 'approved' || this.allowedManage;
+      },
+      canSubmit() {
+        if (this.submitting) return false;
+
+        if (!this.identity.role) return false;
+        if (!this.identity.real_name) return false;
+
+        switch (this.identity.role) {
+          case 'student':
+            if (!this.identity.graduation_year) return false;
+            break;
+
+          case 'teacher': break;
+          case 'other': break;
+        }
+
+        return true;
+      }
+    },
+    methods: {
+      showMessage(type, content) {
+        this.messages.unshift({ id: Math.random().toString(), type, content });
+      },
+      closeMessage(message) {
+        this.messages.splice(this.messages.indexOf(message), 1);
+      },
+      setStatus(action) {
+        $.post(`/api/user/${this.user.id}/verify/${action}`, data => {
+          if (data.error) {
+            this.showMessage('error', data.error);
+          } else {
+            this.identity = data.identity;
+          }
+        }).fail(() => {
+          this.showMessage('error', '提交失败。');
+        });
+      },
+      submit() {
+        this.submitting = true;
+        $.post(`/api/user/${this.user.id}/verify`, this.identity, data => {
+          if (data.error) {
+            this.showMessage('error', data.error);
+          } else {
+            this.identity = data.identity;
+            this.showMessage('success', '提交成功。');
+          }
+        }).fail(() => {
+          this.showMessage('error', '提交失败。');
+        }).always(() => {
+          this.submitting = false;
+        });
+      }
+    }
+  });
+</script>
+<% include footer %>

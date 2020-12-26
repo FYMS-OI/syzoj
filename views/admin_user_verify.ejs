@@ -1,0 +1,121 @@
+<%
+this.adminPage = 'user_verify';
+%>
+<% include admin_header %>
+
+<style>
+  .stat>span:not(:first-child) {
+    margin-left: 2em;
+  }
+  .stat>span>strong {
+    margin-right: 1em;
+  }
+</style>
+
+<div id="vueApp">
+  <div class="stat">
+    <span>
+      <strong>已认证</strong>
+      {{ stat ? `${stat.approved} / ${stat.total}` : '--' }}
+    </span>
+    <span>
+      <strong>待审核</strong>
+      {{ stat ? stat.pending : '--' }}
+    </span>
+    <span>
+      <strong>审核未通过</strong>
+      {{ stat ? stat.rejected : '--' }}
+    </span>
+    <span class="ui mini compact button" @click="loadData()">
+      <i class="sync icon"></i> 刷新
+    </span>
+  </div>
+  <table class="ui center aligned celled table table_codes">
+    <thead>
+      <tr>
+        <th>用户</th>
+        <th>时间</th>
+        <th>认证信息</th>
+        <th>审核状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="identity of items" :key="identity.user.id">
+        <td>
+          <a :href="`/user/${identity.user.id}`" target="_blank">{{ identity.user.username }}</a>
+        </td>
+        <td>{{ identity.update_time }}</td>
+        <td>
+          <div>角色：{{ roleNames[identity.role] }}</div>
+          <div>真实姓名：{{ identity.real_name }}</div>
+          <template v-if="identity.role === 'student'">
+            <div>高中毕业：{{ identity.graduation_year }} 年</div>
+            <div>当前年级：{{ GradeCalc.getGrade(identity.graduation_year) }}</div>
+          </template>
+        </td>
+        <td>
+          <user-verify-status-label :status="identity.status"></user-verify-status-label>
+        </td>
+        <td>
+          <a class="ui primary mini circular icon button" :href="`/user/${identity.user.id}/verify`" target="_blank">
+            <i class="edit icon"></i>
+          </a>
+          <a v-if="identity.status !== 'approved'" class="ui positive mini circular icon button" @click="setStatus(identity, 'approve')">
+            <i class="checkmark icon"></i>
+          </a>
+          <a v-if="identity.status !== 'rejected'" class="ui negative mini circular icon button" @click="setStatus(identity, 'reject')">
+            <i class="remove icon"></i>
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="<%= syzoj.utils.makeUrl(['self', 'grade-calc.js']) %>"></script>
+
+<% include user_verify_status_label %>
+
+<script>
+  let app = new Vue({
+    el: '#vueApp',
+    data: {
+      items: [],
+      stat: null,
+      roleNames: {
+        student: '学生',
+        teacher: '教师',
+        other: '其它'
+      }
+    },
+    mounted() {
+      this.loadData();
+    },
+    methods: {
+      loadData() {
+        $.get('/api/admin/user_verify', data => {
+          if (data.error) {
+            alert(data.error);
+          } else {
+            this.items = data.items;
+            this.stat = data.stat;
+          }
+        });
+      },
+      setStatus(identity, action) {
+        $.post(`/api/user/${identity.user.id}/verify/${action}`, data => {
+          if (data.error) {
+            alert(data.error);
+          } else {
+            this.stat[identity.status]--;
+            Object.assign(identity, data.identity);
+            this.stat[identity.status]++;
+          }
+        });
+      }
+    }
+  });
+</script>
+<% include admin_footer %>

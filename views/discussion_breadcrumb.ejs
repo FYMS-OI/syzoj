@@ -1,0 +1,61 @@
+<div class="ui breadcrumb">
+  <div class="section">
+    讨论
+  </div>
+  <i class="right angle icon divider"></i>
+  <% if (is_list && !current_problem) { %>
+    <div class="section active">
+      <div id="forum-dropdown" class="ui floating dropdown">
+        <div class="text">
+          <i class="<%= current_forum.icon %> icon"></i> <%= current_forum.title %>
+        </div>
+        <i class="dropdown icon"></i>
+        <div class="menu">
+          <% for (const item of forum_list) { %>
+            <a class="item<% if (item === current_forum) { %> active<% } %>" href="<%= get_list_url(item.name) %>">
+              <i class="<%= item.icon %> icon"></i> <%= item.title %>
+            </a>
+          <% } %>
+        </div>
+      </div>
+      <script>
+        $(function () {
+          $('#forum-dropdown').dropdown({
+            action: 'nothing'
+          });
+        });
+      </script>
+    </div>
+  <% } else { %>
+    <div class="section">
+      <a href="<%= get_list_url(current_forum.name) %>">
+        <i class="<%= current_forum.icon %> icon"></i> <%= current_forum.title %>
+      </a>
+    </div>
+  <% } %>
+  <% if (current_problem) { %>
+    <i class="right angle icon divider"></i>
+    <div class="section<% if (is_list) { %> active<% } %>">
+      <% if (is_list) { %>
+        <%= current_problem.title %>
+      <% } else { %>
+        <a href="<%= get_list_url(article.forum, current_problem.id) %>"><%= current_problem.title %></a>
+      <% } %>
+    </div>
+  <% } %>
+  <% if (!is_list) { %>
+    <% if (is_edit) { %>
+      <% if (article.id) { %>
+        <i class="right angle icon divider"></i>
+        <div class="section">
+          <a href="<%= syzoj.utils.makeUrl(['article', article.id]) %>"><%= article.title %></a>
+        </div>
+      <% } %>
+      <i class="right angle icon divider"></i>
+      <div class="section active"><%= this.title %></div>
+    <% } else { %>
+      <i class="right angle icon divider"></i>
+      <div class="section active"><%= article.title %></div>
+    <% } %>
+  <% } %>
+</div>

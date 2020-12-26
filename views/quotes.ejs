@@ -1,0 +1,778 @@
+<% this.title = '语录列表' %>
+<% let panguMode = 'disabled' %>
+
+<% include header %>
+
+<style>
+  .topbar {
+    margin-bottom: 1em;
+  }
+  .topbar > .ui.button:not(:first-child) {
+    margin-left: 1em;
+  }
+  .pagination-container {
+    text-align: center;
+    margin-bottom: 1em;
+  }
+  .ui.card {
+    max-height: 25em;
+  }
+  .hitokoto-box, .image-box {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .hitokoto-box {
+    min-width: 100%;
+    width: fit-content;
+  }
+  .image-box {
+    width: 100%;
+  }
+  .ui.card > .grow {
+    flex-grow: 1 !important;
+  }
+  .ui.card > .no-grow {
+    flex-grow: 0 !important;
+  }
+  .ui.card > .shrink {
+    flex-shrink: 1 !important;
+  }
+  .ui.card > .no-shrink {
+    flex-shrink: 0 !important;
+  }
+  .ui.card > .grow.shrink {
+    overflow: auto;
+  }
+  .ui.card .actions > .btn-delete:hover {
+    color: red !important;
+  }
+  .ui.card .meta > .vote.active {
+    color: #333;
+  }
+</style>
+
+<div class="padding">
+  <div id="vueApp" style="display: none;">
+    <div class="topbar">
+      <a class="ui small green dropdown button" ref="btn_add">
+        <i class="plus icon"></i> 添加语录
+        <div class="ui menu">
+          <div class="item" @click="addHitokoto">
+            <i class="quote left icon"></i>
+            一言语录
+          </div>
+          <div class="item" @click="addImage">
+            <i class="images outline icon"></i>
+            图片语录
+          </div>
+        </div>
+      </a>
+      <a class="ui small blue button" :class="getActionClass('load')" @click="reloadList(false)">
+        <i class="redo icon"></i> 刷新列表
+      </a>
+      <a class="ui small teal button" :class="getActionClass('leaderboards')" @click="showLeaderboards()">
+        <i class="chart bar icon"></i> 排行榜
+      </a>
+    </div>
+    
+    <div ref="filterBox" class="ui fluid styled accordion" style="margin-bottom: 1em;">
+      <div class="title">
+        <i class="dropdown icon"></i>
+        更多
+      </div>
+      <div class="content">
+        <div class="ui form">
+          <div class="fields">
+            <div class="field">
+              <label>每行显示条数</label>
+              <ui-select
+                :items="[1, 2, 3, 4, 5]"
+                value-type="number"
+                v-model="cardsEachRow"
+                @change="reloadList(true, true)"
+              ></ui-select>
+            </div>
+            <div class="field">
+              <label>每页显示行数</label>
+              <ui-select
+                :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+                value-type="number"
+                v-model="rowsPerPage"
+                @change="reloadList(true, true)"
+              ></ui-select>
+            </div>
+          </div>
+          <div class="fields">
+            <div class="field">
+              <label>语录类型</label>
+              <ui-select
+                :items="[
+                  { text: '不限', value: '' },
+                  { text: '一言', value: 'hitokoto' },
+                  { text: '图片', value: 'image' }
+                ]"
+                clearable
+                v-model="filters.type"
+                @change="reloadList(true, true)"
+              ></ui-select>
+            </div>
+            <div class="field">
+              <label>语录来源</label>
+              <input
+                type="text"
+                placeholder="不限"
+                v-model="filters.from"
+                @input="scheduleReload()"
+                @change="scheduleReload(true)"
+              >
+            </div>
+            <div v-if="allowedManage" class="field">
+              <label>语录提供者</label>
+              <input
+                type="text"
+                placeholder="不限"
+                v-model="filters.provider"
+                @input="scheduleReload()"
+                @change="scheduleReload(true)"
+              >
+            </div>
+            <div class="field">
+              <label>排序方式</label>
+              <ui-select
+                :items="[
+                  { text: '创建时间', value: 'creation_time' },
+                  { text: '最后更新', value: 'update_time' },
+                  { text: '点赞数', value: 'vote_up' }
+                ]"
+                v-model="sortKey"
+                @change="reloadList(true, true)"
+              ></ui-select>
+            </div>
+          </div>
+        </div>
+        <div v-if="paginate && paginate.total">
+          <p>一共找到了 {{ paginate.total }} 条语录。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination-container" v-if="paginate && paginate.pageCnt > 1">
+      <div class="ui pagination menu">
+        <a class="icon item" @click="navigate(paginate.currPage - 1)" :class="{ disabled: paginate.currPage === 1 }">
+          <i class="chevron left icon"></i>
+        </a>
+        <a
+          v-for="item of paginateItems"
+          class="item"
+          :class="{
+            disabled: item === null,
+            active: item === paginate.currPage
+          }"
+          @click="item !== null && navigate(item)"
+        >
+          <template v-if="item !== null">
+            {{ item }}
+          </template>
+          <template v-else>
+            ...
+          </template>
+        </a>
+        <a class="icon item" @click="navigate(paginate.currPage + 1)" :class="{ disabled: paginate.currPage === paginate.pageCnt }">
+          <i class="chevron right icon"></i>
+        </a>
+      </div>
+    </div>
+
+    <div v-if="quotes.length" class="ui cards" :class="containerClassName">
+      <div class="ui card" v-for="quote of quotes" :key="quote.id">
+        <template v-if="quote.type === 'hitokoto'">
+          <div class="grow shrink content">
+            <quote-content class="hitokoto-box" :quote="quote"></quote-content>
+          </div>
+        </template>
+        <template v-if="quote.type === 'image'">
+          <div class="grow shrink image">
+            <quote-content class="image-box" :quote="quote"></quote-content>
+          </div>
+        </template>
+        <div class="no-grow no-shrink content">
+          <div class="meta">
+            <div>
+              <i class="quote left icon"></i>
+              <span>{{ quote.from.join(', ') }}</span>
+            </div>
+            <div>
+              <i class="clock outline icon"></i>
+              <span>{{ quote.creation_time }}</span>
+            </div>
+            <div v-if="quote.provider && quote.provider.id !== userId">
+              <i class="user outline icon"></i>
+              <a style="color: inherit;" :href="'/user/' + quote.provider.id" target="_blank">{{ quote.provider.username }}</a>
+            </div>
+            <div v-if="quote.type === 'image'">
+              <i class="image file outline icon"></i>
+              <span>{{ quote.content.filename.split('.')[1].toUpperCase() }}</span>
+              <i class="hdd outline icon" style="margin-left: .5em;"></i>
+              <span>{{ formatSize(quote.content.size, 2) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="extra no-grow no-shrink content">
+          <div class="meta">
+            <span class="vote" :class="{ active: quote.vote.self === 1 }">
+              <i class="thumbs up outline icon"></i>
+              {{ quote.vote.total.up }}
+            </span>
+            <span class="vote" :class="{ active: quote.vote.self === -1 }">
+              <i class="thumbs down outline icon"></i>
+              {{ quote.vote.total.down }}
+            </span>
+            <div class="actions" style="float: right;">
+              <i class="info circle link icon" @click="showQuoteInfo(quote)"></i>
+              <a v-if="quote.type === 'image'" @click="previewItem(quote)">
+                <i class="eye icon"></i>
+              </a>
+              <template v-if="quote.privileged">
+                <a @click="editItem(quote)">
+                  <i class="edit icon"></i>
+                </a>
+                <a class="btn-delete" @click="deleteItem(quote)">
+                  <i class="trash alternate icon"></i>
+                </a>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="ui placeholder segment">
+      <div class="ui icon header">
+        <template v-if="pending.load">
+          <i class="notched circle loading icon" style="margin-bottom: 20px;"></i>
+          语录在路上了……
+        </template>
+        <template v-else>
+          <i class="file outline icon" style="margin-bottom: 20px;"></i>
+          这里什么也没有
+        </template>
+      </div>
+    </div>
+
+    <ui-modal ref="modalMessage" :variation="message.variation" closable auto-close allow-multiple>
+      <template #header>{{ message.title }}</template>
+      <p style="white-space: pre-line;">{{ message.content }}</p>
+      <template #actions>
+        <div class="ui positive button">关闭</div>
+      </template>
+    </ui-modal>
+
+    <ui-modal ref="modalEdit" auto-close-when-deny @approve="confirmEditHandler" @hidden="finishEditHandler">
+      <template v-if="quoteToEdit" #header>
+        <template v-if="quoteToEdit.id === null">
+          添加语录
+        </template>
+        <template v-else>
+          编辑语录
+        </template>
+      </template>
+      <div v-if="quoteToEdit" class="ui form">
+        <div class="ui field">
+          <label>语录来源</label>
+          <ui-search-dropdown
+            ref="quoteEditDropdown"
+            class="fluid"
+            :options="quoteEditDropdownOptions"
+            v-model="quoteToEdit.from"
+          >
+            这条语录来自谁？
+          </ui-search-dropdown>
+        </div>
+        <template v-if="quoteToEdit.type === 'hitokoto'">
+          <div class="ui field">
+            <label>语录内容（支持 Markdown 与 HTML）</label>
+            <textarea class="markdown-edit" rows="8" v-model="quoteToEdit.content.hitokoto"></textarea>
+          </div>
+          <div class="ui field">
+            <ui-checkbox class="toggle" v-model="quoteToEdit.content.is_dialog">这是一段对话</ui-checkbox>
+          </div>
+        </template>
+        <template v-if="quoteToEdit.type === 'image'">
+          <template v-if="quoteToEdit.id === null">
+            <div class="ui field">
+              <label>上传图片（支持多选）</label>
+              <input ref="fileInput" type="file" multiple accept="image/*">
+            </div>
+          </template>
+        </template>
+      </div>  
+      <template #actions>
+        <div class="ui negative button">取消</div>
+        <div class="ui positive button" :class="getActionClass('edit')">确定</div>
+      </template>
+    </ui-modal>
+
+    <ui-modal ref="modalPreview" variation="tiny" closable auto-close scrolling>
+      <template #header>预览</template>
+      <div v-if="quoteToPreview" style="text-align: center;">
+        <img :src="quoteToPreview.content.url">
+      </div>
+      <template #actions>
+        <div class="ui positive button">关闭</div>
+      </template>
+    </ui-modal>
+
+    <ui-modal ref="modalDelete" variation="small" closable auto-close-when-deny @approve="confirmDeleteHandler">
+      <template #header>删除语录</template>
+      <div v-if="quoteToDelete" class="ui grid">
+        <div class="ui seven wide column">
+          <quote-content class="ui existing segment" :quote="quoteToDelete"></quote-content>
+        </div>
+        <div class="ui nine wide column">
+          <p>确定要删除这条语录吗？</p>
+          <p>来源：{{ quoteToDelete.from.join(', ') }}</p>
+        </div>
+      </div>
+      <template #actions>
+        <div class="ui negative button">取消</div>
+        <div class="ui positive button" :class="getActionClass('delete')">确定</div>
+      </template>
+    </ui-modal>
+
+    <ui-modal ref="modalLeaderboards" scrolling closable auto-close>
+      <template #header>排行榜</template>
+      <table v-if="leaderboards" class="ui very basic center aligned table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>来源</th>
+            <th>语录数量</th>
+            <th>点赞总数 / 平均数</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item of leaderboards">
+            <td><div :class="getRankClass(item.rank)">{{ item.rank }}</div></td>
+            <td>{{ item.from }}</td>
+            <td>{{ item.quote_count }}</td>
+            <td>{{ item.vote_up_sum }} / {{ (item.vote_up_sum / item.quote_count).toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <template #actions>
+        <div class="ui positive button">关闭</div>
+      </template>
+    </ui-modal>
+  </div>
+</div>
+
+<script src="<%- syzoj.utils.makeUrl(['cdnjs', `vue/2.6.11/vue.${syzoj.production ? 'min.js' : 'js'}`]) %>"></script>
+
+<% include quote_content %>
+<% include ui_input %>
+<% include ui_modal %>
+
+<script>
+
+  function formatSize(x, precision) {
+    if (typeof x !== 'number') return '--';
+    let unit = 'B', units = ['K', 'M', 'G', 'T'];
+    for (let i in units) if (x > 1024) x /= 1024, unit = units[i];
+    var fixed = x === Math.round(x) ? x.toString() : x.toFixed(precision);
+    return fixed + ' ' + unit;
+  }
+  Vue.prototype.formatSize = formatSize;
+
+  $.ajaxSetup({
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json'
+  });
+
+  let app = new Vue({
+    el: '#vueApp',
+    data: {
+      userId: <%= user.id %>,
+      allowedManage: <%- JSON.stringify(!!allowedManage) %>,
+      usernameRegex: new RegExp(<%- JSON.stringify(syzoj.config.username_regex) %>),
+      pending: {
+        load: null,
+        edit: null,
+        delete: null,
+        leaderboards: null
+      },
+      reloadTimer: null,
+      message: {
+        title: null,
+        content: null
+      },
+      filters: {
+        type: '',
+        from: '',
+        provider: ''
+      },
+      lastFilters: {
+        type: '',
+        from: '',
+        provider: ''
+      },
+      sortKey: 'creation_time',
+      paginate: null,
+      quotes: [],
+      quoteToPreview: null,
+      quoteToEdit: null,
+      quoteToDelete: null,
+      cardsEachRow: 4,
+      rowsPerPage: 4,
+      maxPaginateItems: 15,
+      pagniate: null,
+      leaderboards: null
+    },
+
+    mounted() {
+      $(() => {
+        $(this.$refs.btn_add).dropdown({
+          selectOnKeydown: false,
+          action: 'hide'
+        });
+        $(this.$refs.filterBox).accordion();
+
+        this.reloadList(true);
+        
+        $(this.$el).show();
+      });
+    },
+
+    computed: {
+      containerClassName() {
+        return [, 'one', 'two', 'three', 'four', 'five'][this.cardsEachRow];
+      },
+
+      cardsPerPage() {
+        return this.cardsEachRow * this.rowsPerPage;
+      },
+
+      paginateItems() {
+        const { currPage, pageCnt } = this.paginate;
+        const range = (l, r) => new Array(r - l + 1).fill(null).map((_, index) => l + index);
+        if (pageCnt <= this.maxPaginateItems) {
+          return range(1, pageCnt);
+        }
+        const expand = (this.maxPaginateItems - 5) / 2;
+        const lbound = 1, rbound = pageCnt;
+        const lWidth = currPage - lbound;
+        const rWidth = rbound - currPage;
+        if (lWidth <= expand + 2) {
+          return [...range(lbound, lbound + 2 * expand + 2), null, rbound];
+        }
+        if (rWidth <= expand + 2) {
+          return [lbound, null, ...range(rbound - 2 * expand - 2, rbound)];
+        }
+        return [lbound, null, ...range(currPage - expand, currPage + expand), null, rbound];
+      },
+
+      quoteEditDropdownOptions() {
+        return {
+          allowAdditions: true,
+          apiSettings: {
+            url: '/api/user/search?q={query}',
+            onResponse: resp => {
+              resp.success = !resp.error;
+              resp.results = resp.data
+                .map(({ username }) => username)
+                .filter(username => !this.quoteToEdit.from.includes(username))
+                .map(username => ({ name: username, value: username }));
+              return resp;
+            },
+            cache: false
+          },
+          saveRemoteData: false,
+          filterRemoteData: true
+        };
+      }
+    },
+
+    methods: {
+      showMessage(content, title, variation = 'mini') {
+        this.message = {
+          content, title, variation
+        };
+        this.$refs.modalMessage.show();
+      },
+
+      async performAction(name, callback) {
+        try {
+          await callback();
+        } catch (err) {
+          let message = null;
+          if (err instanceof Error) {
+            message = err.message;
+          } else if (typeof err === 'object') {
+            message = err.status ? `${err.status} ${err.statusText}` : '网络错误';
+          } else if (typeof err === 'string') {
+            message = err;
+          }
+          this.showMessage(message || '未知错误', '好像哪里有点问题');
+        }
+      },
+
+      pendAction(name, callback) {
+        const current = async () => {
+          await this.pending[name];
+          await this.performAction(name, callback);
+          if (this.pending[name] === current)
+            this.pending[name] = null;
+        };
+        this.pending[name] = current;
+        return current();
+      },
+
+      getActionClass(name) {
+        const flag = this.pending[name];
+        return {
+          loading: flag,
+          disabled: flag
+        };
+      },
+
+      getQuoteInfo(quote) {
+        const items = [];
+        items.push(['ID', quote.id]);
+        items.push(['创建时间', quote.creation_time]);
+        items.push(['最后更新', quote.update_time]);
+        if (quote.from.length) items.push(['来源', quote.from.join(', ')]);
+        if (quote.provider) items.push(['提供者', quote.provider.username]);
+        if (quote.type === 'image') {
+          const [md5, ext] = quote.content.filename.split('.');
+          items.push(['文件类型', ext.toUpperCase()]);
+          items.push(['文件大小', formatSize(quote.content.size, 2)]);
+          items.push(['MD5', md5]);
+        }
+        return items.map(([name, value]) => `${name}：${value}`).join('\n');
+      },
+
+      showQuoteInfo(quote) {
+        this.showMessage(this.getQuoteInfo(quote), '语录信息', 'mini');
+      },
+
+      loadHandler(resp) {
+        this.quotes = resp.result;
+        this.paginate = resp.paginate;
+      },
+
+      reloadList(pageIndex, clearList) {
+        if (pageIndex === true) {
+          pageIndex = 1;
+        } else if (pageIndex === false) {
+          pageIndex = this.paginate ? this.paginate.currPage : 1;
+        }
+        this.pendAction('load', () =>
+          new Promise((resolve, reject) => {
+            if (clearList === true) {
+              this.quotes = [];
+              this.paginate = null;
+            }
+            const url = new URL('/api/quote/list', location.href);
+            url.searchParams.set('p', pageIndex);
+            url.searchParams.set('c', this.cardsPerPage);
+            url.searchParams.set('type', this.filters.type);
+            url.searchParams.set('from', this.filters.from);
+            url.searchParams.set('provider', this.filters.provider);
+            url.searchParams.set('sort', this.sortKey);
+            $.get(url.href, resp => {
+              if (resp.error) {
+                reject(resp.error);
+              } else {
+                this.loadHandler(resp);
+                resolve();
+              }
+            }).fail(reject);
+            this.updateFilters();
+          })
+        );
+      },
+
+      isValidUsername(username) {
+        return this.usernameRegex.test(username);
+      },
+
+      compareFilters() {
+        for (const key in this.filters) {
+          if (this.filters[key] !== this.lastFilters[key]) return false;
+        }
+        return true;
+      },
+
+      checkFilters() {
+        if (this.compareFilters()) return false;
+        if (this.filters.from && !this.isValidUsername(this.filters.from)) return false;
+        if (this.filters.provider && !/^[0-9]+$/.test(this.filters.provider) && !this.isValidUsername(this.filters.provider)) return false;
+        return true;
+      },
+
+      updateFilters() {
+        for (const key in this.filters) {
+          this.lastFilters[key] = this.filters[key];
+        }
+      },
+
+      scheduleReload(now) {
+        if (this.reloadTimer) {
+          clearTimeout(this.reloadTimer);
+          this.reloadTimer = null;
+        }
+        if (this.checkFilters()) {
+          this.reloadTimer = setTimeout(() => {
+            this.reloadTimer = null;
+            this.reloadList(true, true);
+          }, now ? 0 : 666);
+        }
+      },
+
+      navigate(pageIndex) {
+        if (!this.paginate) return;
+        if (pageIndex < 1 || pageIndex > this.paginate.pageCnt) return;
+        if (pageIndex === this.paginate.currPage) return;
+        this.reloadList(pageIndex);
+      },
+
+      showEdit(quote) {
+        if (quote.id === null) {
+          this.quoteToEdit = quote;
+        } else {
+          this.quoteToEdit = JSON.parse(JSON.stringify(quote));
+        }
+        this.$refs.modalEdit.show();
+      },
+
+      addHitokoto() {
+        this.showEdit({
+          id: null,
+          type: 'hitokoto',
+          content: {
+            hitokoto: '',
+            is_dialog: false
+          },
+          from: [],
+          weight: 1
+        });
+      },
+
+      addImage() {
+        this.showEdit({
+          id: null,
+          type: 'image',
+          content: {},
+          from: [],
+          weight: 1
+        });
+      },
+
+      previewItem(quote) {
+        this.quoteToPreview = quote;
+        this.$refs.modalPreview.show();
+      },
+
+      editItem(quote) {
+        this.showEdit(quote);
+      },
+
+      deleteItem(quote) {
+        this.quoteToDelete = quote;
+        this.$refs.modalDelete.show();
+      },
+
+      confirmEditHandler() {
+        this.pendAction('edit', () => {
+          return new Promise((resolve, reject) => {
+            const quote = this.quoteToEdit;
+
+            const formData = new FormData();
+            formData.set('data', JSON.stringify(quote));
+
+            if (quote.id === null && quote.type === 'image') {
+              for (const file of this.$refs.fileInput.files) {
+                formData.append('files', file);
+              }
+            }
+            
+            $.ajax({
+              method: 'POST',
+              url: `/api/quote/${quote.id === null ? 0 : quote.id}/edit`,
+              data: formData,
+              mimeType: "multipart/form-data",
+              contentType: false,
+              cache: false,
+              processData: false
+            }).done(resp => {
+              if (resp.error) {
+                reject(resp.error);
+              } else {
+                this.$refs.modalEdit.hide();
+                if (resp.result && resp.result.length) {
+                  this.showMessage(resp.result.join('\n'), '上传结果', '');
+                }
+                this.reloadList(['update_time'].includes(this.sortKey));
+                resolve();
+              }
+            }).fail(reject);
+          });
+        });
+      },
+
+      finishEditHandler() {
+        this.quoteToEdit = null;
+      },
+
+      confirmDeleteHandler() {
+        this.pendAction('delete', () => {
+          return new Promise((resolve, reject) => {
+            $.post(`/api/quote/${this.quoteToDelete.id}/delete`, resp => {
+              if (resp.error) {
+                reject(resp.error);
+              } else {
+                this.$refs.modalDelete.hide();
+                this.reloadList(false);
+                resolve();
+              }
+            }).fail(reject);
+          });
+        });
+      },
+
+      getRankClass(rank) {
+        if (rank === 1) return 'ui yellow ribbon label';
+        if (rank === 2) return 'ui ribbon label';
+        if (rank === 3) return 'ui brown ribbon label';
+        return '';
+      },
+
+      showLeaderboards() {
+        this.pendAction('leaderboards', () =>
+          new Promise((resolve, reject) => {
+            $.get('/api/quote/leaderboards', resp => {
+              if (resp.error) {
+                reject(resp.error);
+              } else {
+                let index = 0, rank = 0, last = null;
+                for (const item of resp.result) {
+                  ++index;
+                  if (!last || item.quote_count !== last.quote_count || item.vote_up_sum !== last.vote_up_sum) rank = index;
+                  item.rank = rank;
+                  last = item;
+                }
+                this.leaderboards = resp.result;
+                this.$refs.modalLeaderboards.show();
+                resolve();
+              }
+            }).fail(reject);
+          }));
+      }
+    }
+  });
+
+</script>
+
+<% include footer %>

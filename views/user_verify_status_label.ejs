@@ -1,0 +1,41 @@
+<script id="userVerifyStatusLabelTemplate" type="text/x-template">
+  <span class="ui tiny label" :class="labelClass">
+    <i class="icon" :class="iconClass"></i> {{ statusText }}
+  </span>
+</script>
+
+<script>
+  Vue.component('user-verify-status-label', {
+    template: '#userVerifyStatusLabelTemplate',
+    props: {
+      status: {
+        type: String
+      }
+    },
+    computed: {
+      labelClass() {
+        switch (this.status) {
+          case 'approved': return 'green';
+          case 'rejected': return 'red';
+          default: return '';
+        }
+      },
+      iconClass() {
+        switch (this.status) {
+          case 'pending': return 'hourglass half';
+          case 'approved': return 'checkmark';
+          case 'rejected': return 'remove';
+          default: return 'minus';
+        }
+      },
+      statusText() {
+        switch (this.status) {
+          case 'pending': return '审核中';
+          case 'approved': return '已实名';
+          case 'rejected': return '审核未通过';
+          default: return '未实名';
+        }
+      }
+    }
+  });
+</script>

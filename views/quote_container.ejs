@@ -1,0 +1,115 @@
+
+<% /* requires: quote_content */ %>
+
+<style>
+  .quote-container>.actions>.vote>span:not(:first-child) {
+    margin-left: .3em;
+  }
+  .quote-container>.actions>.vote>span>span.count {
+    margin-left: -.2em;
+  }
+  .quote-container>.actions i.link.icon.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+</style>
+
+<script id="quoteContainerTemplate" type="text/x-template">
+  <div class="quote-container">
+    <div v-if="!quote && !error" class="ui active centered inline loader"></div>
+    <div v-if="error" class="ui error message">{{ error }}</div>
+    <quote-content v-if="quote" :quote="quote"></quote-content>
+    <div class="ui divider"></div>
+    <div class="actions">
+      <div class="vote" style="float: right;">
+        <span>
+          <i class="ui thumbs up link icon" :class="getVoteButtonClass(1)" @click="setVote(1)"></i>
+          <span v-if="quote && quote.vote" class="count">{{ quote.vote.total.up }}</span>
+        </span>
+        <span>
+          <i class="ui thumbs down link icon" :class="getVoteButtonClass(-1)" @click="setVote(-1)"></i>
+          <span v-if="quote && quote.vote" class="count">{{ quote.vote.total.down }}</span>
+        </span>
+      </div>
+      <i class="ui random link icon" :class="{ disabled: loading }" @click="fetch()"></i>
+      <a v-if="isCustom" href="<%= syzoj.utils.makeUrl(['quotes']) %>" target="_blank">
+        <i class="ui list black link icon"></i>
+      </a>
+    </div>
+  </div>
+</script>
+
+<script>
+  Vue.component('quote-container', {
+    template: '#quoteContainerTemplate',
+    props: {
+      url: {
+        type: String
+      },
+      isCustom: {
+        type: Boolean
+      }
+    },
+    data: () => ({
+      quote: null,
+      error: null
+    }),
+    mounted() {
+      this.fetch();
+    },
+    computed: {
+      loading() {
+        return !this.quote && !this.error;
+      }
+    },
+    methods: {
+      getVoteButtonClass(value) {
+        const list = [];
+        if (this.quote && this.quote.vote) {
+          const self = this.quote.vote.self;
+          list.push(self === value ? 'blue' : 'grey');
+        } else {
+          list.push('grey');
+          list.push('disabled');
+        }
+        return list;
+      },
+
+      fetch() {
+        this.quote = null;
+        this.error = null;
+        $.get(this.url, resp => {
+          if (this.isCustom) {
+            if (resp.error) {
+              this.error = resp.error;
+            } else {
+              this.quote = resp.result;
+            }
+          } else {
+            this.quote = {
+              type: 'hitokoto',
+              content: {
+                text: resp.hitokoto,
+                is_dialog: false
+              },
+              from: resp.from ? [resp.from] : []
+            };
+          }
+        }).fail(xhr => {
+          this.error = xhr.statusText;
+        });
+      },
+
+      setVote(vote) {
+        const quote = this.quote;
+        if (!quote || !quote.vote) return;
+        if (quote.vote.self === vote) vote = 0;
+        $.post(`/api/quote/${quote.id}/vote/${vote}`, resp => {
+          if (!resp.error) {
+            quote.vote = resp.result;
+          }
+        });
+      }
+    }
+  });
+</script>

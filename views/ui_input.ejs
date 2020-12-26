@@ -1,0 +1,160 @@
+
+<script id="uiSearchDropdownTemplate" type="text/x-template">
+  <select ref="select" class="ui search dropdown" multiple>
+    <option v-for="item of items" :key="item" :value="item" selected>
+      {{ item }}
+    </option>
+  </select>
+</script>
+
+<script id="uiCheckboxTemplate" type="text/x-template">
+  <div class="ui checkbox">
+    <input type="checkbox" :checked="checked">
+    <label>
+      <slot></slot>
+    </label>
+  </div>
+</script>
+
+<script id="uiSelectTemplate" type="text/x-template">
+  <select ref="select" class="ui dropdown">
+    <option
+      v-for="(item, index) of processedItems"
+      :key="item.value"
+      :value="item.value"
+      :selected="value === item.value"
+    >
+      {{ item.text }}
+    </option>
+  </select>
+</script>
+
+<script>
+  Vue.component('ui-search-dropdown', {
+    template: '#uiSearchDropdownTemplate',
+    props: {
+      options: {
+        type: Object
+      },
+      items: {
+        type: Array,
+        default: () => []
+      }
+    },
+    model: {
+      prop: 'items',
+      event: 'change'
+    },
+    computed: {
+      $sel() {
+        return $(this.$refs.select);
+      }
+    },
+    mounted() {
+      const handler = () => {
+        setTimeout(() => {
+          this.$emit('change', this.get())
+        }, 0);
+      };
+      $(() => {
+        this.$sel.dropdown({
+          ...this.options,
+          onAdd: handler,
+          onRemove: handler
+        });
+      });
+    },
+    methods: {
+      get() {
+        return [...new Set(this.$sel.dropdown('get value'))];
+      }
+    }
+  });
+
+  Vue.component('ui-checkbox', {
+    template: '#uiCheckboxTemplate',
+    props: {
+      checked: {
+        type: Boolean,
+        default: false
+      }
+    },
+    model: {
+      prop: 'checked',
+      event: 'change'
+    },
+    computed: {
+      $input() {
+        return $(this.$el);
+      }
+    },
+    mounted() {
+      $(() => {
+        this.$input.checkbox({
+          onChange: () => {
+            this.$emit('change', this.isChecked());
+          }
+        });
+      });
+    },
+    methods: {
+      isChecked() {
+        return this.$input.checkbox('is checked');
+      }
+    }
+  });
+
+  Vue.component('ui-select', {
+    template: '#uiSelectTemplate',
+    props: {
+      items: {
+        type: Array
+      },
+      value: {
+        type: [String, Number]
+      },
+      valueType: {
+        type: String,
+        default: 'string'
+      },
+      clearable: {
+        type: Boolean,
+        default: false
+      }
+    },
+    model: {
+      prop: 'value',
+      event: 'change'
+    },
+    computed: {
+      $sel() {
+        return $(this.$refs.select);
+      },
+      processedItems() {
+        return this.items.map(item => {
+          if (typeof item === 'object') {
+            return item;
+          } else {
+            return { text: item.toString(), value: item };
+          }
+        });
+      }
+    },
+    mounted() {
+      $(() => {
+        const process = value => {
+          switch (this.valueType) {
+            case 'number':
+              return parseInt(value);
+            default:
+              return value;
+          }
+        };
+        this.$sel.dropdown({
+          clearable: this.clearable,
+          onChange: value => this.$emit('change', process(value))
+        });
+      });
+    }
+  });
+</script>

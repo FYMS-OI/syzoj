@@ -1,0 +1,27 @@
+<%
+  this.forum_list = syzoj.forum_list;
+
+  this.is_list = typeof article === 'undefined';
+  this.current_forum = syzoj.forum_map.get(is_list ? forum : article.forum);
+  this.current_problem = is_list ? problem : article.problem;
+  this.is_contest = typeof contest !== 'undefined' && contest;
+
+  this.get_list_url = function (forum, problem_id) {
+    if (problem_id) {
+      switch (forum) {
+        case 'problems': return syzoj.utils.makeUrl(['discussion', 'problem', problem_id]);
+        case 'solutions': return syzoj.utils.makeUrl(['problem', problem_id, 'solutions'], is_contest && { contest_id: contest.id });
+      }
+    } else {
+      return syzoj.utils.makeUrl(['discussion', forum]);
+    }
+  };
+
+  this.get_problem_url = function () {
+    if (is_contest) {
+      return syzoj.utils.makeUrl(['contest', contest.id, 'problem', contest.problems_id.indexOf(current_problem.id) + 1]);
+    } else {
+      return syzoj.utils.makeUrl(['problem', current_problem.id]);
+    }
+  };
+%>

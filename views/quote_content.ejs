@@ -1,0 +1,51 @@
+
+<style>
+  .quote-content {
+    text-align: center;
+  }
+  .quote-content div.content, .quote-content table.dialog {
+    font-size: 1em;
+    line-height: 1.5em;
+  }
+  .quote-content table.dialog {
+    display: inline-block;
+    text-align: left;
+  }
+  .quote-content table.dialog td.from {
+    vertical-align: top;
+    white-space: nowrap;
+  }
+  .quote-content div.from {
+    width: 100%;
+    margin-top: .5em;
+    text-align: right;
+    font-size: 0.9em;
+    color: #666;
+  }
+</style>
+
+<script id="quoteContentTemplate" type="text/x-template">
+  <div class="quote-content">
+    <template v-if="quote.type === 'hitokoto'">
+      <div class="hitokoto" v-if="quote.content.html" v-html="quote.content.html"></div>
+      <div class="hitokoto" v-if="quote.content.text">{{ quote.content.text }}</div>
+      <table class="hitokoto dialog" v-if="quote.content.dialog">
+        <tr v-for="item of quote.content.dialog">
+          <td class="from">{{ item.from }}</td>
+          <td class="content" v-html="item.content"></td>
+        </tr>
+      </table>
+      <div class="from" v-if="quote.from.length && !quote.content.is_dialog">—— {{ quote.from.join(', ') }}</div>
+    </template>
+    <template v-if="quote.type === 'image'">
+      <img class="image" :src="quote.content.url">
+    </template>
+  </div>
+</script>
+
+<script>
+  Vue.component('quote-content', {
+    template: '#quoteContentTemplate',
+    props: ['quote']
+  });
+</script>

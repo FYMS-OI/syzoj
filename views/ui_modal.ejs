@@ -1,0 +1,99 @@
+
+<script id="uiModalTemplate" type="text/x-template">
+  <div class="ui modal" :class="variation">
+    <div class="header">
+      <slot name="header"></slot>
+    </div>
+    <div class="content" :class="{ scrolling: this.scrolling }">
+      <slot></slot>
+    </div>
+    <div class="actions">
+      <slot name="actions"></slot>
+    </div>
+  </div>
+</script>
+
+<script>
+  Vue.component('ui-modal', {
+    template: '#uiModalTemplate',
+    props: {
+      autoFocus: {
+        type: Boolean,
+        default: false
+      },
+      closable: {
+        type: Boolean,
+        default: false
+      },
+      autoClose: {
+        type: Boolean,
+        default: false
+      },
+      autoCloseWhenApprove: {
+        type: Boolean,
+        default: false
+      },
+      autoCloseWhenDeny: {
+        type: Boolean,
+        default: false
+      },
+      allowMultiple: {
+        type: Boolean,
+        default: false
+      },
+      scrolling: {
+        type: Boolean,
+        default: false
+      },
+      variation: {
+        type: String,
+        default: null
+      }
+    },
+    computed: {
+      $modal() {
+        return $(this.$el);
+      }
+    },
+    mounted() {
+      $(() => {
+        this.$modal.modal({
+          closable: this.closable,
+          autofocus: this.autoFocus,
+          allowMultiple: this.allowMultiple,
+          onApprove: () => {
+            this.$emit('approve');
+            return this.autoClose || this.autoCloseWhenApprove;
+          },
+          onDeny: () => {
+            this.$emit('deny');
+            return this.autoClose || this.autoCloseWhenDeny;
+          },
+          onShow: () => {
+            this.$emit('show');
+          },
+          onVisible: () => {
+            this.$emit('visible');
+          },
+          onHide: () => {
+            this.$emit('hide');
+          },
+          onHidden: () => {
+            this.$emit('hidden');
+          }
+        });
+      });
+    },
+    methods: {
+      show() {
+        this.$modal.modal('show');
+      },
+      hide() {
+        this.$modal.modal('hide');
+      },
+      refresh() {
+        this.$modal.modal('refresh');
+      }
+    }
+  });
+</script>

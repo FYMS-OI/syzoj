@@ -1,0 +1,416 @@
+<% this.title = '题库' %>
+<% include header %>
+<div class="padding">
+  <div class="ui grid" style="margin-bottom: 10px; ">
+    <div class="row">
+      <div class="column top_toolbar">
+        <div class="left_bar">
+          <% if (typeof tags !== 'undefined') { %>
+            <% for (let arr of tags) { %>
+              <div class="tag_group">
+              <% for (let tag of arr) { %>
+                <a href="javascript:;" data-tag-id="<%= tag.id %>" class="ui tiny <%= tag.color %> label label_toggle_tag">
+                  <%= tag.name %>
+                </a>
+              <% } %>
+              </div>
+            <% } %>
+          <% } else if (typeof providers !== 'undefined') { %>
+            <div class="tag_group">
+              <% for (let provider of providers) { %>
+                <div data-user-id="<%= provider.id %>" class="ui label label_toggle_provider">
+                  上传者：<a href="<%= syzoj.utils.makeUrl(['user', provider.id]) %>"><%= provider.username %></a>
+                  <i class="ui delete icon"></i>
+                </div>
+              <% } %>
+            </div>
+          <% } else { %>
+            <form action="<%= syzoj.utils.makeUrl(['problems', 'search']) %>" method="get">
+              <div class="ui search" style="width: 280px; height: 28px; margin-top: -5.3px; ">
+                <div class="ui left icon input" style="width: 100%; ">
+                  <input class="prompt" style="width: 100%; " type="text" value="<%= req.query.keyword %>" placeholder="ID / 题目名 …" name="keyword">
+                  <i class="search icon"></i>
+                </div>
+                <div class="results" style="width: 100%; "></div>
+              </div>
+            </form>
+          <% } %>
+        </div>
+        <div class="right_bar">
+          <div class="ui floating circular icon mini dropdown button" id="options_dropdown">
+            <i class="cog icon"></i>
+            <div class="menu">
+              <div class="ui toggle checkbox item" id="show_tag">
+                <style id="show_tag_style"></style>
+                <script data-cfasync="false">
+                if (localStorage.getItem('show_tag') === '1') {
+                  document.write('<input type="checkbox" checked>');
+                  document.getElementById('show_tag_style').innerHTML = '';
+                } else {
+                  document.write('<input type="checkbox">');
+                  document.getElementById('show_tag_style').innerHTML = '.show_tag_controled .tag_hidden { display: none; }';
+                }
+                </script>
+
+                <script>
+                $(function () {
+                  $('#show_tag').checkbox('setting', 'onChange', function () {
+                    let checked = $('#show_tag').checkbox('is checked');
+                    localStorage.setItem('show_tag', checked ? '1' : '0');
+                    if (checked) {
+                      document.getElementById('show_tag_style').innerHTML = '';
+                    } else {
+                      document.getElementById('show_tag_style').innerHTML = '.show_tag_controled .tag_hidden { display: none; }';
+                    }
+                  });
+                });
+                </script>
+                <label>显示隐藏标签</label>
+              </div>
+              <div class="ui toggle checkbox item" id="highlight_todo">
+                <script data-cfasync="false">
+                if (localStorage.getItem('highlight_todo') === '1') {
+                  document.write('<input type="checkbox" checked>');
+                  $(function() {
+                    $('.table_problems').addClass('highlight_todo');
+                  });
+                } else {
+                  document.write('<input type="checkbox">');
+                }
+                </script>
+
+                <script>
+                $(function () {
+                  $('#highlight_todo').checkbox('setting', 'onChange', function () {
+                    let checked = $('#highlight_todo').checkbox('is checked');
+                    localStorage.setItem('highlight_todo', checked ? '1' : '0');
+                    if (checked) {
+                      $('.table_problems').addClass('highlight_todo');
+                    } else {
+                      $('.table_problems').removeClass('highlight_todo');
+                    }
+                  });
+                });
+                </script>
+                <label>高亮任务计划</label>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: inline-block; ">
+            <% if (allowedManageTag) { %>
+              <% if (typeof tags !== 'undefined' && tags.length === 1 && tags[0].length === 1) { %>
+                <a style="margin-left: 10px; " href="<%= syzoj.utils.makeUrl(['problems', 'tag', tags[0][0].id, 'edit']) %>" class="ui labeled icon mini blue button"><i class="write icon"></i> 编辑标签</a>
+              <% } %>
+              <a style="margin-left: 10px; " href="<%= syzoj.utils.makeUrl(['problems', 'tag', 0, 'edit']) %>" class="ui labeled icon mini green button"><i class="plus icon"></i> 添加标签</a>
+            <% } %>
+            <% if (showTagFilter) { %>
+              <div id="tag_search_dropdown" class="ui labeled icon mini teal dropdown button" style="margin-left: 10px;">
+                <i class="tag icon"></i>
+                <span class="text">标签筛选</span>
+                <div class="menu" style="width: 20em;">
+                  <div class="ui icon search input">
+                    <i class="search icon"></i>
+                    <input type="text" placeholder="搜索标签" style="font-size: .9rem;">
+                  </div>
+                  <div class="scrolling menu" title="点击：切换是否选中这个标签，Shift + 点击：只选中这个标签 / 取消选中这个标签"></div>
+                </div>
+              </div>
+            <% } %>
+            <div style="margin-left: 10px; " class="ui mini buttons">
+              <div class="ui labeled icon mini dropdown button" id="add_problem_dropdown"><i class="plus icon"></i> 添加题目
+              <div class="menu">
+                <a class="item" href="<%= syzoj.utils.makeUrl(['problem', 0, 'edit']) %>"><i class="file icon"></i> 新建题目</a>
+                <a class="item" href="<%= syzoj.utils.makeUrl(['problem', 0, 'import']) %>"><i class="cloud download icon"></i> 导入题目</a>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .top_toolbar > .left_bar {
+      float: left;
+      margin-top: 5px;
+    }
+    .top_toolbar > .right_bar {
+      float: right;
+      white-space: nowrap;
+    }
+    .top_toolbar > .left_bar > form {
+      margin-top: 4px;
+    }
+    .top_toolbar > .left_bar > .tag_group {
+      display: inline-block;
+      margin-top: 6px;
+    }
+    .top_toolbar > .left_bar > .tag_group:not(:last-child) {
+      margin-right: 1em;
+    }
+    .top_toolbar > .right_bar {
+      margin-top: 10px;
+    }
+    .show_tag_controled {
+      overflow: hidden;
+      float: right;
+      text-align: right;
+    }
+    .table_problems > tbody > tr {
+      height: 44px;
+    }
+    .table_problems.highlight_todo > tbody > tr.todo {
+      background: #66666610;
+    }
+    .table_problems.highlight_todo > tbody > tr.todo.solved {
+      background: #21ba4510;
+    }
+    .table_problems.highlight_todo > tbody > tr.todo.attempted {
+      background: #2185d010;
+    }
+    #options_dropdown > .menu > .item:not(:first-child) {
+      border-top: 1px solid rgba(34, 36, 38, .15);
+    }
+  </style>
+
+  <% if (problems.length) { %>
+  <div style="margin-bottom: 30px; ">
+    <% include page %>
+  </div>
+  <table class="ui very basic center aligned table table_problems">
+    <thead>
+      <tr>
+        <% if (user) { %>
+        <th class="one wide">提交状态</th>
+        <% } %>
+        <th class="one wide"><%- createSortableTitle('id', '编号', true) %></th>
+        <th class="left aligned"><%- createSortableTitle('title', '题目名称', true) %></th>
+        <th class="one wide"><%- createSortableTitle('ac_num', '通过', false) %></th>
+        <th class="one wide"><%- createSortableTitle('submit_num', '提交', false) %></th>
+        <th class="one wide">通过率</th>
+      </tr>
+    </thead>
+    <tbody>
+    <% for (let problem of problems) { %>
+        <% if (problem.is_public || problem.allowedEdit) { %>
+        <%
+          let classList = [];
+          if (user) {
+            if (todoList.has(problem.id)) classList.push('todo');
+            if (problem.judge_state) {
+              if (problem.judge_state.status === 'Accepted') {
+                classList.push('solved');
+              } else {
+                classList.push('attempted');
+              }
+            }
+          }
+        %>
+        <tr class="<%= classList.join(' ') %>">
+            <% if (user) { %>
+                <td>
+                <% if (problem.judge_state) { %>
+                  <a href="<%= syzoj.utils.makeUrl(['submission', problem.judge_state.id]) %>">
+                    <span class="status <%= problem.judge_state.status.toLowerCase().split(' ').join('_') %>">
+                      <i class="<%= icon[problem.judge_state.status] || 'remove' %> icon"></i>
+                    </span>
+                  </a>
+                <% } %>
+                </td>
+            <% } %>
+            <td><b><%= problem.id %></b></td>
+            <td class="left aligned">
+              <a style="vertical-align: middle; " href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>"><%= problem.title %>
+                <% if (!problem.is_public) { %><span class="ui header"><span class="ui tiny red label">未公开</span></span><% } %>
+                <% if (!problem.is_data_public) { %><span class="ui header"><span class="ui tiny orange label">数据未公开</span></span><% } %>
+              </a>
+              <div class="show_tag_controled">
+                <%
+                if (problem.tags) {
+                  for (let i = problem.tags.length - 1; i >= 0; --i) {
+                    let tag = problem.tags[i];
+                  %>
+                  <span class="ui header<% if (syzoj.config.hidden_problem_tag_colors.includes(tag.color)) { %> tag_hidden<% } %>">
+                    <a href="javascript:;" data-tag-id="<%= tag.id %>" class="ui tiny <%= tag.color %> label label_toggle_tag">
+                      <%= tag.name %>
+                    </a>
+                  </span>
+                  <%
+                  }
+                }
+                %>
+              </div>
+            </td>
+            <td><%= problem.ac_num || '' %></td>
+            <td><%= problem.submit_num || '' %></td>
+            <td><%= problem.submit_num != 0 ? (((problem.ac_num / problem.submit_num * 100) || 0).toFixed(2) + '%') : '-' %></td>
+        </tr>
+        <% } %>
+    <% } %>
+    </tbody>
+  </table><br>
+  <% include page  %>
+  <% } else { %>
+  <div class="ui placeholder segment">
+    <div class="ui icon header">
+      <% if (typeof req.query.keyword !== 'undefined') { %>
+      <i class="search icon" style="margin-bottom: 20px; "></i>
+      找不到符合条件的题目
+      <% } else { %>
+      <i class="list icon" style="margin-bottom: 20px; "></i>
+      暂无题目
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+<script>
+document.addEventListener('keydown', function (event) {
+  if (event.keyCode === 39) document.getElementById('page_next').click();
+  else if (event.keyCode === 37) document.getElementById('page_prev').click();
+});
+
+$(function () {
+  var filterTags = <%- JSON.stringify(typeof tags === 'undefined' ? [] : tags) %>;
+  var filterTagIDs = <%- JSON.stringify(typeof tagIDs === 'undefined' ? [] : tagIDs) %>;
+  var allFilterTagIDs = [].concat(...filterTagIDs);
+  var allTags = <%- JSON.stringify(allTags) %>;
+  var filterProviderIDs = <%- JSON.stringify(typeof providerIDs === 'undefined' ? [] : providerIDs) %>;
+  var tagMap = new Map();
+
+  allTags.forEach(function(tag) {
+    tagMap.set(tag.id, tag);
+  });
+
+  function makeTagUrl(tags) {
+    if (!tags.length) return '/problems';
+    return '/problems/tag/' + tags.map(arr => arr.join('+')).join(',');
+  }
+
+  function getFilterToggledTag(id, mode) {
+    if (mode === 'one') {
+      if (allFilterTagIDs.length === 1 && allFilterTagIDs[0] === id) {
+        return [];
+      } else {
+        return [[id]];
+      }
+    } else {
+      if (allFilterTagIDs.includes(id)) {
+        return filterTagIDs.map(arr => arr.filter(x => x !== id)).filter(arr => arr.length);
+      } else {
+        let group = null;
+        let color = tagMap.get(id).color;
+        for (let arr of filterTagIDs) {
+          for (let tagID of arr) {
+            if (tagMap.get(tagID).color === color) {
+              group = arr;
+              break;
+            }
+          }
+          if (group) break;
+        }
+        if (group) {
+          return filterTagIDs.map(arr => arr === group ? arr.concat(id) : arr.slice(0));
+        } else {
+          let result = filterTagIDs.map(arr => arr.slice(0));
+          result.push([id]);
+          return result;
+        }
+      }
+    }
+  }
+
+  function toggleTag(id, mode) {
+    location.href = makeTagUrl(getFilterToggledTag(id, mode));
+  }
+
+  function removeProvider(providerID) {
+    let idRemains = filterProviderIDs.filter(id => id != providerID);
+    if (!idRemains.length) {
+      location.href = '/problems';
+    } else {
+      location.href = '/problems/user/' + idRemains.join(',');
+    }
+  }
+
+  <% if (showTagFilter) { %>
+    const tagOrder = <%- JSON.stringify(syzoj.config.problem_tag_colors) %>;
+    var $tag_search = $('#tag_search_dropdown');
+    var $menu = $tag_search.find('.menu.scrolling');
+    allTags.forEach(function(tag) {
+      tag.filtered = allFilterTagIDs.includes(tag.id);
+    });
+    allTags.sort(function(a, b) {
+      if (a.filtered && !b.filtered) return -1;
+      if (b.filtered && !a.filtered) return 1;
+      let x = tagOrder.indexOf(a.color);
+      let y = tagOrder.indexOf(b.color);
+      if (y === -1 && x !== -1) return -1;
+      if (x === -1 && y !== -1) return 1;
+      if (x < y) return -1;
+      if (x > y) return 1;
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    });
+    $menu.html('');
+    allTags.forEach(function(tag) {
+      var $item = $('<div class="item">');
+      if (tag.filtered) $item.addClass('active');
+      $item.attr('data-value', tag.id).attr('data-content', '#' + tag.id);
+      var $label = $('<div class="ui empty circular label">');
+      $label.addClass(tag.color);
+      $item.append($label);
+      $item.append($('<span>').text(' ' + tag.name));
+      $menu.append($item);
+    });
+    $tag_search.dropdown({
+      fullTextSearch: true,
+      action: function(name, value) {
+        let tagID = parseInt(value);
+        if (event.shiftKey) {
+          toggleTag(tagID, 'one');
+        } else {
+          toggleTag(tagID, 'all');
+        }
+      },
+      selectOnKeydown: false
+    });
+    $tag_search.find('.item[data-content]').popup({
+      position: 'left center'
+    });
+  <% } %>
+  $('body').on('click', 'a.label_toggle_tag', function() {
+    let tagID = parseInt($(this).attr('data-tag-id'));
+    toggleTag(tagID, 'all');
+  });
+  $('body').on('click', 'div.label_toggle_provider i.delete.icon', function() {
+    let providerID = parseInt($(this).parent().attr('data-user-id'));
+    removeProvider(providerID);
+  });
+  $('#add_problem_dropdown').dropdown();
+  $('#options_dropdown').dropdown({
+    on: 'hover',
+    action: "nothing",
+    selectOnKeydown: false,
+    transition: 'fade down'
+  });
+});
+</script>
+<script>
+$(function () {
+  $('.ui.search').search({
+    debug: true,
+    apiSettings: {
+      url: '/api/v2/search/problems/{query}',
+      cache: false
+    },
+    fields: {
+      title: 'name'
+    }
+  });
+});
+</script>
+</div>
+<% include footer %>

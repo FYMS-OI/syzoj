@@ -1,0 +1,37 @@
+version: '3'
+services:
+  web:
+    build: .
+    depends_on:
+    - db
+    - mq
+    - redis
+    links:
+    - db:db
+    - mq:mq
+    - redis:redis
+    volumes:
+      - /mnt/syzoj:/mnt/uploads
+    restart: always
+    ports:
+    - 23333:5283
+    restart: always
+  db:
+    image: mariadb:10.3
+    environment:
+    - MYSQL_ROOT_PASSWORD=123
+    - MYSQL_DATABASE=syzoj
+    - MYSQL_USER=syzoj
+    - MYSQL_PASSWORD=<PWD>
+    restart: always
+  redis:
+    image: "redis:5.0.5-alpine"
+    restart: always
+  mq:
+    image: rabbitmq:management-alpine
+    environment:
+    - RABBITMQ_DEFAULT_USER=syzoj
+    - RABBITMQ_DEFAULT_PASS=<PWD>
+    restart: always
+    ports:
+    - "5672:5672"

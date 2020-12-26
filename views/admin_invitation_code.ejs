@@ -1,0 +1,153 @@
+<%
+this.adminPage = 'invitation_code';
+%>
+<% include admin_header %>
+
+<table class="ui center aligned celled table table_codes">
+<thead>
+  <tr>
+    <th>邀请码</th>
+    <th>创建者</th>
+    <th>创建时间</th>
+    <th>用户名</th>
+    <th>使用次数</th>
+    <th>启用</th>
+    <th>操作</th>
+  </tr>
+</thead>
+
+<tbody>
+  <% for (let code of codes) { %>
+    <tr data-code="<%= code.code %>">
+      <td>
+        <a href="javascript:;" title="点击复制" data-click-copy="<%= code.code %>"><%= code.code %></a>
+      </td>
+      <td>
+        <a href="<%= syzoj.utils.makeUrl(['user', code.creator.id]) %>" target="_blank"><%= code.creator.username %></a>
+      </td>
+      <td><%= syzoj.utils.formatDate(code.creation_time.getTime() / 1000) %></td>
+      <td style="text-align: center;">
+        <% for (let item of code.usernames) { %>
+          <div>
+            <% if (item.used) { %>
+              <a href="<%= syzoj.utils.makeUrl(['user', item.user_id]) %>" target="_blank"><%= item.username %></a>
+            <% } else { %>
+              <span><%= item.username %></span>
+            <% } %>
+          </div>
+        <% } %>
+      </td>
+      <td><%= code.usage_count %></td>
+      <td>
+        <div class="ui fitted toggle checkbox">
+          <input class="i_enabled" type="checkbox"<% if (code.enabled) { %> checked<% } %>>
+          <label></label>
+        </div>
+      </td>
+      <td>
+        <a class="ui red small compact button button_delete" href="javascript:void(0);">删除</a>
+      </td>
+    </tr>
+  <% } %>
+</tbody>
+</table>
+
+<div class="ui divider"></div>
+
+<div class="ui error message" id="error" data-am-alert hidden>
+  <p id="error_info"></p>
+</div>
+<form class="ui form">
+  <div class="field">
+    <label for="usernames">用户名（一行一个）</label>
+    <textarea id="usernames"></textarea>
+  </div>
+  <div style="text-align: center;">
+    <a id="create_code" class="ui button" href="javascript:create_code();">创建邀请码</a>
+  </div>
+</form>
+
+<script type="text/javascript">
+  function show_error(error) {
+    var $error = $('#error');
+    $("#error_info").text(error);
+    if ($error.is(':visible')) {
+      $error.transition('pulse');
+    } else {
+      $error.transition('scale');
+    }
+  }
+
+  function create_code() {
+    var usernames = $('#usernames').val().split('\n')
+      .map((a) => a.trim())
+      .filter((a) => a.length);
+    if (!usernames.length) {
+      show_error('至少要填写一个用户名');
+      return;
+    }
+    $("#create_code").addClass("loading");
+    $.ajax({
+      method: 'POST',
+      url: '/api/admin/invitation_code/create',
+      data: {
+        usernames: usernames
+      },
+      success: function(data) {
+        if (data.error) {
+          show_error(data.error);
+          $("#create_code").removeClass("loading");
+        } else {
+          location.reload();
+        }
+      },
+      error: function(XMLHttpRequest, textStatus, errorThrown) {
+        alert(XMLHttpRequest.responseText);
+        show_error("未知错误");
+        $("#create_code").removeClass("loading");
+      }
+    });
+  }
+
+  $('.table_codes').on('click', 'a.button_delete', function() {
+    var code = $(this).parents('tr').attr('data-code');
+    if (!confirm("确定删除邀请码 " + code + " 吗？")) return;
+    $.ajax({
+      method: 'POST',
+      url: '/api/admin/invitation_code/' + code + '/delete',
+      success: function(data) {
+        if (data.error) {
+          alert(data.error);
+        } else {
+          location.reload();
+        }
+      },
+      error: function(XMLHttpRequest, textStatus, errorThrown) {
+        alert(XMLHttpRequest.responseText);
+      }
+    })
+  }).on('change', 'input.i_enabled', function() {
+    var $this = $(this);
+    var code = $this.parents('tr').attr('data-code');
+    var enabled = $this.prop('checked');
+    $this.prop('disabled', true);
+    $.ajax({
+      method: 'POST',
+      url: '/api/admin/invitation_code/' + code + '/' + (enabled ? 'enable' : 'disable'),
+      success: function(data) {
+        if (data.error) {
+          alert(data.error);
+          $this.prop('checked', !enabled);
+        }
+        $this.prop('disabled', false);
+      },
+      error: function(XMLHttpRequest, textStatus, errorThrown) {
+        alert(XMLHttpRequest.responseText);
+        $this.prop('checked', !enabled)
+          .prop('disabled', false);
+      }
+    });
+  });
+
+</script>
+<% include admin_footer %>

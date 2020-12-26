@@ -1,0 +1,35 @@
+<% this.adminPage = 'bulk_public'; %>
+<% include admin_header %>
+
+<div>
+<div class="ui <%= status === 'success' ? 'positive' : status === 'failed' ? 'error' : '' %> message"<% if (!status) { %> style="display: none;"<% } %>>
+    <p id="error_info"><%= status ? error_info : '' %></p>
+</div>
+<form class="ui form" method="POST" action="<%= syzoj.utils.makeUrl(['admin', 'bulk_public']) %>">
+  <div class="two fields">
+    <div class="field" style="width: 12em;">
+      <label>题目编号范围（最小值）</label>
+      <input name="number_min" type="number" value="" required>
+    </div>
+    <div class="field" style="width: 12em;">
+      <label>题目编号范围（最大值）</label>
+      <input name="number_max" type="number" value="" required>
+    </div>
+  </div>
+  <div>
+    <div class="ui toggle checkbox">
+      <input id="is_public" name="is_public" type="checkbox">
+      <label for="is_public">公开题目</label>
+    </div>
+    <div class="ui toggle checkbox" style="margin-left: 2em;">
+      <input id="is_data_public" name="is_data_public" type="checkbox">
+      <label for="is_data_public">公开数据</label>
+    </div>
+  </div>
+  <div style="margin-top: 1em;">
+    <input class="ui button" type="submit" value="确定">
+  </div>
+</form>
+</div>
+
+<% include admin_footer %>

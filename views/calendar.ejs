@@ -1,0 +1,141 @@
+<% this.title = '日历' %>
+<% let panguMode = 'disabled' %>
+<% include header %>
+
+<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="<%- lib('semantic-ui/2.4.1/semantic.min.js') %>"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
+
+<div class="padding" id="appCalendar">
+  <div class="ui fluid styled accordion" style="margin-top: 1em;">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      筛选
+    </div>
+    <div class="content ui form">
+      <div class="fields" style="margin-bottom: 0em">
+        <div class="field">
+          <label>OJ</label>
+          <select name="states" class="ui selection dropdown" multiple="" id="multi-select" v-model="ojSelected">
+            <option value="">OJ</option>
+            <option v-for="oj in ojList" :value="oj">{{ oj }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>比赛名称</label>
+          <div class="ui icon input">
+            <input type="text" placeholder="比赛" v-model="contestName">
+            <i class="search icon"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="ui very basic center aligned table" style="table-layout: fixed">
+    <thead>
+      <tr>
+        <th style="width: 60px">#</th>
+        <th style="width: 150px">OJ</th>
+        <th>比赛</th>
+        <th style="width: 150px">开始时间</th>
+        <th style="width: 150px">结束时间</th>
+        <th style="width: 150px">时长</th>
+      </tr>
+    </thead>
+    <tbody v-for="(contest, cnt) of shownContests">
+      <tr>
+        <td>{{ cnt + 1 }}</td>
+        <td>
+          <img :src="contest.oj.icon.url" :alt="contest.oj.name" :class="'oj-icon ' + contest.oj.icon.variety">
+          {{ contest.oj.name }}
+        </td>
+        <td><a :href="contest.url" target="_blank">{{ contest.name }}</a></td>
+        <td>{{ contest.shownStartTime }}</td>
+        <td>{{ contest.shownEndTime }}</td>
+        <td>{{ contest.shownLastTime }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  var appCalendar = new Vue({
+    el: '#appCalendar',
+    data: {
+      contests: [],
+      ojList: [],
+      ojSelected: [],
+      contestName: ''
+    },
+    methods: {
+      parseMinutes(minutes) {
+        const days = parseInt(minutes / 60 / 24), hours = parseInt(minutes / 60) % 24;
+        minutes = minutes % 60;
+        return [
+          days && `${days} 天`,
+          hours && `${hours} 小时`,
+          minutes && `${minutes} 分钟`
+        ].filter(str => !!str).join(' ');
+      },
+      loadContests(data) {
+        let contests = [];
+        for (let { contests: list, ...oj } of data.oj) {
+          for (let contest of list) {
+            contests.push({ oj, ...contest });
+          }
+        }
+        contests.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        for (let contest of contests) {
+          contest.shownLastTime = this.parseMinutes(moment(contest.endTime).diff(contest.startTime, 'm'));
+          contest.shownStartTime = moment(contest.startTime).format('MM 月 DD 日 HH:mm');
+          contest.shownEndTime = moment(contest.endTime).format('MM 月 DD 日 HH:mm');
+        }
+        return contests;
+      },
+      loadOjList(data) {
+        return data.oj.map(({ name }) => name);
+      }
+    },
+    computed: {
+      shownContests() {
+        let data = this.contests;
+        if (this.ojSelected.length > 0) {
+          data = data.filter(res => this.ojSelected.includes(res.oj.name));
+        }
+        data = data.filter(res => res.name.toLowerCase().includes(this.contestName.toLowerCase()));
+        return data;
+      }
+    },
+    async mounted() {
+      try {
+        let data = await fetch(<%- serializejs(syzoj.config.calendar.api_url) %>)
+          .then(res => res.json());
+        this.contests = this.loadContests(data);
+        this.ojList = this.loadOjList(data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  });
+</script>
+
+<script>
+  $('.dropdown').dropdown();
+  $('.ui.accordion').accordion();
+</script>
+
+<style type="text/css">
+  img.oj-icon {
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: text-bottom;
+    margin-right: .25em;
+  }
+
+  img.oj-icon.circular {
+    border-radius: 50%;
+  }
+</style>
+
+<% include footer %>
