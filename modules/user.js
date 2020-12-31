@@ -317,7 +317,7 @@ app.post('/user/:id/edit', async (req, res) => {
       user.password = req.body.new_password;
     }
 
-    if (res.locals.user && await res.locals.user.hasPrivilege('manage_user')) {
+    if (res.locals.user.id === user.id || (res.locals.user && await res.locals.user.hasPrivilege('manage_user'))) {
       if (!syzoj.utils.isValidUsername(req.body.username)) throw new ErrorMessage('无效的用户名。');
       user.username = req.body.username;
       user.email = req.body.email;

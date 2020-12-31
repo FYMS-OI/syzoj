@@ -52,6 +52,9 @@
     <thead>
       <tr>
         <th class="left aligned" style="width: 45%; ">标题</th>
+        <% if (forum === 'solutions') { %>
+          <th style="width: 20%; ">状态</th>
+        <% } %>
         <% if (in_problems) { %>
           <th style="width: 20%; ">所属题目</th>
         <% } %>
@@ -64,17 +67,24 @@
     </thead>
     <tbody>
     <% for (let article of articles) { %>
+      <% if (forum !== 'solutions' || (forum === 'solutions' && (user.id === article.user_id || user.is_admin || article.is_public === 1))) { %> 
         <tr>
-            <td class="left aligned"><a href="<%= syzoj.utils.makeUrl(['article', article.id], is_contest && { contest_id: contest.id }) %>"><%= article.title %></a></td>
-            <% if (in_problems) { %>
-              <td><a href="<%= get_list_url(article.forum, article.problem.id) %>"><%= article.problem.title %></a></td>
-            <% } %>
-            <td><a href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a><% if (article.user.nameplate) { %><%- article.user.nameplate %><% } %></td>
-            <td><%= article.views %></td>
-            <td><%= article.comments_num %></td>
-            <td><%= article.vote_up %></td>
-            <td><%= syzoj.utils.formatDate(article.sort_time) %></td>
+          <td class="left aligned"><a href="<%- syzoj.utils.makeUrl(['article', article.id], is_contest && { contest_id: contest.id }) %>"><%- article.title %></a></td>
+          <% if (forum === 'solutions') { %>
+            <% if (article.is_public === 1) { %> <td><p class="ui label green">过审</p></td> <% } %>
+            <% if (article.is_public === -1) { %> <td><p class="ui label red">驳回</p></td> <% } %>
+            <% if (article.is_public === 0) { %> <td><p class="ui label yellow">等待审核</p></td> <% } %>
+          <% } %>
+          <% if (in_problems) { %>
+            <td><a href="<%= get_list_url(article.forum, article.problem.id) %>"><%= article.problem.title %></a></td>
+          <% } %>
+          <td><a href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a><% if (article.user.nameplate) { %><%- article.user.nameplate %><% } %></td>
+          <td><% article.views %></td>
+          <td><% article.comments_num %></td>
+          <td><% article.vote_up %></td>
+          <td><% syzoj.utils.formatDate(article.sort_time) %></td>
         </tr>
+      <% } %>
     <% } %>
     </tbody>
   </table>

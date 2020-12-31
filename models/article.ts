@@ -65,6 +65,9 @@ export default class Article extends Model {
   @TypeORM.Column({ type: "integer", default: 0 })
   vote_down: number;
 
+  @TypeORM.Column({ type: "integer", default: 0 })
+  is_public: number;
+
   user?: User;
   problem?: Problem;
 
@@ -74,6 +77,18 @@ export default class Article extends Model {
 
   async isAllowedEditBy(user) {
     return user && (user.is_admin || this.user_id === user.id);
+  }
+
+  async isSolAllowedEditBy(user) {
+    if (!user) return false;
+    if (await user.hasPrivilege('manage_solution')) return true;
+    return user.is_admin || this.user_id === user.id;
+  }
+
+  async isSolAllowedPublicBy(user) {
+    if (!user) return false;
+    if (await user.hasPrivilege('manage_solution')) return true;
+    return user.is_admin;
   }
 
   async isAllowedCommentBy(user) {
