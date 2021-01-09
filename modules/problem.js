@@ -1170,7 +1170,7 @@ app.get('/problem/:id/solutions', app.useRestriction, async (req, res) => {
     });
 
     for (let article of articles) await article.loadRelationships();
-
+    res.locals.user.allowedManageSol = await res.locals.user.hasPrivilege('manage_solution');
     res.render('discussion', {
       articles: articles,
       paginate: paginate,

@@ -138,6 +138,7 @@ export default class Problem extends Model {
     if (this.is_public) return true;
     if (!user) return false;
     if (await user.hasPrivilege('manage_problem')) return true;
+    if (await user.hasPrivilege('manage_solution')) return true;
     return this.user_id === user.id;
   }
 

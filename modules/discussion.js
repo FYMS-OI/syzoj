@@ -35,7 +35,7 @@ app.get('/discussion/:type?', async (req, res) => {
         article.problem = await Problem.findById(article.problem_id);
       }
     }
-
+    res.locals.user.allowedManageSol = await res.locals.user.hasPrivilege('manage_solution');
     res.render('discussion', {
       articles: articles,
       paginate: paginate,
@@ -52,6 +52,7 @@ app.get('/discussion/:type?', async (req, res) => {
 
 app.get('/discussion/problem/:pid', async (req, res) => {
   try {
+    if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     let pid = parseInt(req.params.pid);
     let problem = await Problem.findById(pid);
     if (!problem) throw new ErrorMessage('无此题目。');
@@ -83,14 +84,17 @@ app.get('/discussion/problem/:pid', async (req, res) => {
 
 app.get('/article/:id', app.useRestriction, async (req, res) => {
   try {
+    if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     let id = parseInt(req.params.id);
     let article = await Article.findById(id);
     if (!article) throw new ErrorMessage('无此帖子。');
     await article.loadRelationships();
-    article.allowedEdit = await article.isAllowedEditBy(res.locals.user);
+    if (article.forum === 'solutions')
+      article.allowedEdit = await article.isSolAllowedEditBy(res.locals.user);
+    else
+      article.allowedEdit = await article.isAllowedEditBy(res.locals.user);
     article.allowedComment = await article.isAllowedCommentBy(res.locals.user);
-    if (article.forum === 'solutions' && article.is_public != 1 && !article.allowedEdit) throw new ErrorMessage('该题解未审核通过，暂时无法查看。');
-
+    if (article.forum === 'solutions' && article.is_public != 1 && !await article.isSolAllowedEditBy(res.locals.user)) throw new ErrorMessage('该题解未审核通过，暂时无法查看。');
 
     let where = { article_id: id };
     let commentsCount = await ArticleComment.countForPagination(where);
@@ -147,6 +151,7 @@ app.get('/article/:id/edit', async (req, res) => {
 
     let id = parseInt(req.params.id);
     let article = await Article.findById(id);
+    res.locals.user.allowedManageSol = await res.locals.user.hasPrivilege('manage_solution');
 
     if (!article) {
       article = await Article.create();
@@ -247,7 +252,9 @@ app.post('/article/:id/delete', async (req, res) => {
     if (!article) {
       throw new ErrorMessage('无此帖子。');
     } else {
-      if (!await article.isAllowedEditBy(res.locals.user)) throw new ErrorMessage('您没有权限进行此操作。');
+      if (!await article.isAllowedEditBy(res.locals.user)
+        || (article.forum === 'solutions' && !await article.isSolAllowedEditBy(res.locals.user)))
+        throw new ErrorMessage('您没有权限进行此操作。');
     }
 
     await article.delete();

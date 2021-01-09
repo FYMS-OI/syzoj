@@ -82,13 +82,13 @@ export default class Article extends Model {
   async isSolAllowedEditBy(user) {
     if (!user) return false;
     if (await user.hasPrivilege('manage_solution')) return true;
-    return user.is_admin || this.user_id === user.id;
+    return user && (user.is_admin || this.user_id === user.id);
   }
 
   async isSolAllowedPublicBy(user) {
     if (!user) return false;
     if (await user.hasPrivilege('manage_solution')) return true;
-    return user.is_admin;
+    return user && user.is_admin;
   }
 
   async isAllowedCommentBy(user) {

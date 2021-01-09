@@ -67,7 +67,7 @@
     </thead>
     <tbody>
     <% for (let article of articles) { %>
-      <% if (forum !== 'solutions' || (forum === 'solutions' && (user.id === article.user_id || user.is_admin || article.is_public === 1))) { %> 
+      <% if (forum !== 'solutions' || (forum === 'solutions' && (user.id === article.user_id || user.is_admin || user.allowedManageSol || article.is_public === 1))) { %> 
         <tr>
           <td class="left aligned"><a href="<%- syzoj.utils.makeUrl(['article', article.id], is_contest && { contest_id: contest.id }) %>"><%- article.title %></a></td>
           <% if (forum === 'solutions') { %>
@@ -78,11 +78,11 @@
           <% if (in_problems) { %>
             <td><a href="<%= get_list_url(article.forum, article.problem.id) %>"><%= article.problem.title %></a></td>
           <% } %>
-          <td><a href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a><% if (article.user.nameplate) { %><%- article.user.nameplate %><% } %></td>
-          <td><% article.views %></td>
-          <td><% article.comments_num %></td>
-          <td><% article.vote_up %></td>
-          <td><% syzoj.utils.formatDate(article.sort_time) %></td>
+          <td><a href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a><% if(article.user.tg_name && article.user.tg_color) { %> <div class="ui <%= article.user.tg_color %> label"><%= article.user.tg_name %></div><% } %> </td></td>
+          <td><%= article.views %></td>
+          <td><%= article.comments_num %></td>
+          <td><%= article.vote_up %></td>
+          <td><%= syzoj.utils.formatDate(article.sort_time) %></td>
         </tr>
       <% } %>
     <% } %>
