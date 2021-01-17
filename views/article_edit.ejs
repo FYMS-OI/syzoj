@@ -40,9 +40,15 @@
       <div id="pv-content" class="font-content"></div>
     </div>
     <div style="text-align: center; ">
+    <% if (article.forum==='solutions') { %>
       <button id="submit_button" type="submit" class="ui labeled submit icon button">
         <i class="icon edit"></i> 提交审核
       </button>
+    <% } else { %>
+      <button id="submit_button" type="submit" class="ui labeled submit icon button">
+        <i class="icon edit"></i> 发布文章
+      </button>
+    <% } %>
     <% if (article.forum==='solutions' && user && (user.is_admin || user.allowedManageSol) && article.id) { %>
       <div class="ui buttons" style="margin-top: 5px;">
         <a class="ui negative button" href-post="<%= syzoj.utils.makeUrl(["article",

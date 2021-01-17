@@ -1568,15 +1568,15 @@ has-to-string-tag-x@^1.2.0:
   dependencies:
     has-symbol-support-x "^1.4.1"
 
+highlight.js@10.4:
+  version "10.4.0"
+  resolved "https://registry.npm.taobao.org/highlight.js/download/highlight.js-10.4.0.tgz#ef3ce475e5dfa7a48484260b49ea242ddab823a0"
+  integrity sha1-7zzkdeXfp6SEhCYLSeokLdq4I6A=
+
 highlight.js@^9.6.0:
   version "9.15.8"
   resolved "https://registry.npm.taobao.org/highlight.js/download/highlight.js-9.15.8.tgz#f344fda123f36f1a65490e932cf90569e4999971"
   integrity sha1-80T9oSPzbxplSQ6TLPkFaeSZmXE=
-
-highlightjs@^9.16.2:
-  version "9.16.2"
-  resolved "https://registry.npm.taobao.org/highlightjs/download/highlightjs-9.16.2.tgz#07ea6cc7c93340fc440734fb7abf28558f1f0fe1"
-  integrity sha1-B+psx8kzQPxEBzT7er8oVY8fD+E=
 
 html-encoding-sniffer@^1.0.2:
   version "1.0.2"
