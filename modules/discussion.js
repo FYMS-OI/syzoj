@@ -216,9 +216,6 @@ app.post('/article/:id/edit', async (req, res) => {
       } else {
         article.problem_id = null;
       }
-
-      if (article.forum === 'solutions' && await article.isSolAllowedPublicBy(res.locals.user))
-        article.is_public = true;
     } else {
       if (!await article.isAllowedEditBy(res.locals.user)
         || (article.forum === 'solutions' && !await article.isSolAllowedEditBy(res.locals.user)))
@@ -230,9 +227,56 @@ app.post('/article/:id/edit', async (req, res) => {
     article.content = req.body.content;
     article.update_time = time;
     article.is_notice = (res.locals.user && res.locals.user.is_admin ? req.body.is_notice === 'on' : article.is_notice);
+    article.is_public = 0;
 
     await article.save();
 
+    res.redirect(syzoj.utils.makeUrl(['article', article.id]));
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    });
+  }
+});
+
+app.post('/article/:id/public', async (req, res) => {
+  try {
+    if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
+    res.locals.user.allowedManageSol = await res.locals.user.hasPrivilege('manage_solution');
+    if (!res.locals.user.allowedManageSol) throw new ErrorMessage('您没有权限进行此操作。');
+
+    let id = parseInt(req.params.id);
+    let article = await Article.findById(id);
+
+    if (!article) throw new ErrorMessage('您是怎么进来的。。。');
+    if (article.forum !== 'solutions') throw new ErrorMessage('您是怎么进来的。。。');
+
+    article.is_public = 1;
+    await article.save();
+    res.redirect(syzoj.utils.makeUrl(['article', article.id]));
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    });
+  }
+});
+
+app.post('/article/:id/dis_public', async (req, res) => {
+  try {
+    if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
+    res.locals.user.allowedManageSol = await res.locals.user.hasPrivilege('manage_solution');
+    if (!res.locals.user.allowedManageSol) throw new ErrorMessage('您没有权限进行此操作。');
+
+    let id = parseInt(req.params.id);
+    let article = await Article.findById(id);
+
+    if (!article) throw new ErrorMessage('您是怎么进来的。。。');
+    if (article.forum !== 'solutions') throw new ErrorMessage('您是怎么进来的。。。');
+
+    article.is_public = -1;
+    await article.save();
     res.redirect(syzoj.utils.makeUrl(['article', article.id]));
   } catch (e) {
     syzoj.log(e);

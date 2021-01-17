@@ -11,7 +11,13 @@
 <script>hljs.initHighlightingOnLoad();</script>
 <div class="padding">
   <% include discussion_breadcrumb %>
-  <h1><%= article.title %></h1>
+  <h1><%= article.title %>
+  <% if (article.forum === 'solutions') { %>
+    <% if (article.is_public === 1) { %> <td><p class="ui label green">过审</p></td> <% } %>
+    <% if (article.is_public === -1) { %> <td><p class="ui label red">驳回</p></td> <% } %>
+    <% if (article.is_public === 0) { %> <td><p class="ui label yellow">等待审核</p></td> <% } %>
+  <% } %>
+  </h1>
  	<p style="margin-bottom: -5px; ">
 	<img style="vertical-align: middle; margin-bottom: 2px; margin-right: 2px; " src="<%= syzoj.utils.gravatar(article.user.email, 34) %>" width="17" height="17">
 	<b style="margin-right: 30px; "><a class="black-link" href="<%= syzoj.utils.makeUrl(['user', article.user_id]) %>"><%= article.user.username %></a></b>

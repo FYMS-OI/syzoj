@@ -33,22 +33,26 @@
         </div>
         <br>
       <% } %>
-      <% if (article.forum === 'solutions' && user && (user.is_admin || user.allowedManageSol)) { %>
-        <div class="ui buttons" style="margin-top: 5px;">
-          <button class="ui negative button">驳回</button>
-          <div class="or"></div>
-          <button class="ui positive button">通过</button>
-        </div>
-        <% } %>
+      
     </div>
     <div class="ui bottom attached tab segment" data-tab="preview">
       <div class="ui header" id="pv-title"></div>
       <div id="pv-content" class="font-content"></div>
     </div>
     <div style="text-align: center; ">
-    <button id="submit_button" type="submit" class="ui labeled submit icon button">
-      <i class="icon edit"></i> 提交
-    </button>
+      <button id="submit_button" type="submit" class="ui labeled submit icon button">
+        <i class="icon edit"></i> 提交审核
+      </button>
+    <% if (article.forum==='solutions' && user && (user.is_admin || user.allowedManageSol) && article.id) { %>
+      <div class="ui buttons" style="margin-top: 5px;">
+        <a class="ui negative button" href-post="<%= syzoj.utils.makeUrl(["article",
+          article.id, "dis_public" ]) %>" >驳回</a>
+        <div class="or"></div>
+        <a class="ui positive button" href-post="<%= syzoj.utils.makeUrl(["article", article.id, "public"
+          ]) %>" >通过</a>
+      </div>
+    <% } %>
+      
     </div>
   </form>
 </div>
