@@ -4,6 +4,7 @@ config.json
 .git.*
 package-lock.json
 models-built
+dump.rdb
 
 # Logs
 logs
