@@ -33,7 +33,6 @@ export default class User extends Model {
   @TypeORM.Column({ nullable: true, type: "varchar", length: 15 })
   tg_color: string;
 
-
   @TypeORM.Column({ nullable: true, type: "varchar", length: 80 })
   nickname: string;
 
