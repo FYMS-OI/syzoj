@@ -2,6 +2,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN" style="position: fixed; width: 100%; overflow: hidden; ">
 <head>
+    <style>
+        .ui.menu .item>i.fal {
+        opacity: .9;
+        float: none;
+        margin: 0 .35714286em 0 0;
+    }
+    </style>
     <meta charset="utf-8">
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=1200">
@@ -11,6 +18,7 @@
     <link href="<%- selfLib('math.css') %>" rel="stylesheet">
     <link href="<%- selfLib('style.css') %>?20181212" rel="stylesheet">
     <link href="<%- lib('morris.js/0.5.1/morris.css') %>" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/Linhk1606/fontawesome-cdn@master/css/all.min.css", rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.4.0/build/styles/atom-one-light.min.css">
     <link rel="shortcut icon" type="image/png" href="https://cdn.jsdelivr.net/gh/FYMS-OI/cdn@2020-11-29/images/avatar.png"/>
     <% if (useLocalLibs || !syzoj.config.google_fonts || !['like-google-fonts', 'like-local', 'built-in'].includes(syzoj.config.google_fonts.type)) { %>
@@ -76,18 +84,18 @@
             <% } else { %>
             <a class="header item" href="/"><span style="font-family: 'Exo 2'; font-size: 1.5em; font-weight: 600; "><%= syzoj.config.title %></span></a>
             <% } %>
-            <a class="item<% if (active === '') { %> active<% } %>" href="/"><i class="home icon"></i> 首页</a>
-            <a class="item<% if (active.startsWith('problem')) { %> active<% } %>" href="/problems"><i class="list icon"></i> 题库</a>
-            <a class="item<% if (active.startsWith('contest')) { %> active<% } %>" href="/contests"><i class="chart bar icon"></i> 比赛</a>
-            <a class="item<% if (active.startsWith('submission')) { %> active<% } %>" href="/submissions"><i class="tasks icon"></i> 评测</a>
-            <a class="item<% if (active.startsWith('ranklist')) { %> active<% } %>" href="/ranklist"><i class="signal icon"></i> 排名</a>
-            <a class="item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global"><i class="comments icon"></i> 讨论</a>
-            <a class="item<% if (active.startsWith('help')) { %> active<% } %>" href="/help"><i class="help circle icon"></i> 帮助</a>
+            <a class="item<% if (active === '') { %> active<% } %>" href="/"><i class="fal fa-home"></i> 首页</a>
+            <a class="item<% if (active.startsWith('problem')) { %> active<% } %>" href="/problems"><i class="fal fa-list"></i> 题库</a>
+            <a class="item<% if (active.startsWith('contest')) { %> active<% } %>" href="/contests"><i class="fal fa-chart-bar"></i> 比赛</a>
+            <a class="item<% if (active.startsWith('submission')) { %> active<% } %>" href="/submissions"><i class="fal fa-tasks"></i> 评测</a>
+            <a class="item<% if (active.startsWith('ranklist')) { %> active<% } %>" href="/ranklist"><i class="fal fa-signal"></i> 排名</a>
+            <a class="item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global"><i class="fal fa-comments"></i> 讨论</a>
+            <a class="item<% if (active.startsWith('help')) { %> active<% } %>" href="/help"><i class="fal fa-question-circle"></i> 帮助</a>
             <% if (syzoj.config.calendar.enabled) { %>
-              <a class="item<% if (active.startsWith('calendar')) { %> active<% } %>" href="/calendar"><i class="calendar alternate icon"></i> 日历</a>
+              <a class="item<% if (active.startsWith('calendar')) { %> active<% } %>" href="/calendar"><i class="fal fa-calendar"></i> 日历</a>
             <% } %>
             <% if (typeof contest !== 'undefined' && contest && contest.id) { %>
-              <a id="back_to_contest" class="item" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>"><i class="arrow left icon"></i> 返回比赛</a>
+              <a id="back_to_contest" class="item" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>"><i class="fal fa-arrow-left"></i> 返回比赛</a>
             <% } %>
             <div class="right menu">
               <% if (user) { %>
