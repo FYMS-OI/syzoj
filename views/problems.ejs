@@ -209,7 +209,7 @@
           }
         %>
         <tr class="<%= classList.join(' ') %>">
-            <% if (user) { %>
+            <% if (user) {  %>
                 <td>
                 <% if (problem.judge_state) { %>
                   <a href="<%= syzoj.utils.makeUrl(['submission', problem.judge_state.id]) %>">
