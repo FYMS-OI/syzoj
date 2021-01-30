@@ -9,11 +9,21 @@
         margin: 0 .35714286em 0 0;
     }
     </style>
+    <style>
+    @media only screen and (max-width: 992px){
+        .ui.grid [class*="right floated"].column {
+        display: none!important;
+        }
+        .ui.column.grid>[class*="eleven wide"].column, .ui.grid>.column.row>[class*="eleven wide"].column, .ui.grid>.row>[class*="eleven wide"].column, .ui.grid>[class*="eleven wide"].column {
+        width: 100%!important;
+        }
+    }
+    </style>
     <meta charset="utf-8">
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=1200">
     <title><%= title %> - <%= syzoj.config.title %></title>
-    <link href="https://cdn.jsdelivr.net/gh/FYMS-OI/cdn@2020-11-29/css/semantic.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/FYMS-OI/cdn@2021-01-30/css/semantic.min.css" rel="stylesheet">
     <link href="<%- selfLib('tomorrow.css') %>" rel="stylesheet">
     <link href="<%- selfLib('math.css') %>" rel="stylesheet">
     <link href="<%- selfLib('style.css') %>?20181212" rel="stylesheet">
