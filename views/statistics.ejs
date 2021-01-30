@@ -76,7 +76,7 @@ function getColorOfScore(score) {
               <td><a href="<%= syzoj.utils.makeUrl(['submission', judge.id]) %>">
                   <b>
                   <span class="status <%= getStatusMeta(judge.status).toLowerCase().split(' ').join('_') %>">
-                  <i class="<%= icon[getStatusMeta(judge.status)] || 'remove' %> icon"></i>
+                  <i class="fad <%= icon[getStatusMeta(judge.status)] || 'fa-times' %>"></i>
                   <%= judge.status %>
                   </span>
                   </b>
@@ -89,7 +89,7 @@ function getColorOfScore(score) {
               <% } else { %>
                 <td><%= syzoj.utils.formatSize(judge.max_memory) %></td>
               <% } %>
-              <td><a href="<%= syzoj.utils.makeUrl(['user', judge.user_id]) %>"><%= judge.user.username %></a><% if (judge.user.nameplate) { %><%- judge.user.nameplate %><% } %></td>
+              <td><a href="<%= syzoj.utils.makeUrl(['user', judge.user_id]) %>"><%= judge.user.username %></a><% if(judge.user.tg_name && judge.user.tg_color) { %> <div class="ui <%= judge.user.tg_color %> label"><%= judge.user.tg_name %></div><% } %></td>
               <td><%= syzoj.utils.formatDate(judge.submit_time) %></td>
           </tr>
       <% } %>

@@ -106,7 +106,7 @@
           </td>
           <td class="ranklist-item<% if (item.is_official) { %> official<% } %>">
             <span class="ranklist-user">
-              <a href="<%= syzoj.utils.makeUrl(['user', item.user.id]) %>"><%= item.user.username %></a><% if (item.user.nameplate) { %><%- item.user.nameplate %><% } %>
+              <a href="<%= syzoj.utils.makeUrl(['user', item.user.id]) %>"><%= item.user.username %></a><% if(item.user.tg_name && item.user.tg_color) { %> <div class="ui <%= item.user.tg_color %> label"><%= item.user.tg_name %></div><% } %>
             </span>
             <% if (isSupervisior) { %>
               <div class="ui popup">

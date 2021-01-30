@@ -106,7 +106,7 @@
           <img src="<%= syzoj.utils.gravatar(comment.user.email, 120) %>">
         </a>
         <div class="content">
-          <a class="author" href="<%= syzoj.utils.makeUrl(['user', comment.user_id]) %>"><%= comment.user.username %></a><% if (comment.user.nameplate) { %><%- comment.user.nameplate %><% } %>
+          <a class="author" href="<%= syzoj.utils.makeUrl(['user', comment.user_id]) %>"><%= comment.user.username %></a><% if(comment.user.tg_name && comment.user.tg_color) { %> <div class="ui <%= comment.user.tg_color %> label"><%= comment.user.tg_name %></div><% } %>
           <div class="metadata">
             <span class="date"><%= syzoj.utils.formatDate(comment.public_time) %></span>
           </div>

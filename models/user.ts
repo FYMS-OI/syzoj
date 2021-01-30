@@ -37,9 +37,6 @@ export default class User extends Model {
   nickname: string;
 
   @TypeORM.Column({ nullable: true, type: "text" })
-  nameplate: string;
-
-  @TypeORM.Column({ nullable: true, type: "text" })
   information: string;
 
   @TypeORM.Index()
