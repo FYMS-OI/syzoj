@@ -1,0 +1,93 @@
+<% this.title = 'Remote Contests' %>
+<% let panguMode = 'disabled' %>
+<% include header %>
+
+<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="<%- lib('semantic-ui/2.4.1/semantic.min.js') %>"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
+
+<div class="padding">
+<div class="ui warning message">
+  <i class="close icon"></i>
+  <div class="header">
+    该页面暂只支持后端编辑!
+  </div>
+  点击<a href="https://ecs-workbench.aliyun.com/">这里</a>访问阿里云控制台, 找到<code>/opt/syzoj/web/views/remote_contest.ejs</code>进行更改<br>改完记得重启服务!!!
+</div>
+
+<table class="ui very basic center aligned table unstackable">
+<thead>
+    <tr>
+    <th>#</th>
+    <th>比赛名称</th>
+    <th>比赛提供者</th>
+    <th>开始时间</th>
+    <th>链接</th>
+    <th>密码</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+        <td>1</td>
+        <td>YAOI - Winter Round #1 (Div.1)</td>
+        <td><a href="/user/1">Linshey</a></td>
+        <td>2021.2.1</td>
+        <td><a href="https://vjudge.net/contest/420895">点击跳转</a></td>
+        <td>WinTERRouNd#OnE(DivoNe)</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>YAOI - Winter Round #1 (Div.2)</td>
+        <td><a href="/user/1">Linshey</a></td>
+        <td>2021.2.1</td>
+        <td><a href="https://vjudge.net/contest/420893">点击跳转</a></td>
+        <td>WiNtERroUnD#OnE(diVTwO)</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>YAOI - Winter Round #2 (Div.1)</td>
+        <td><a href="/user/1">Linshey</a></td>
+        <td>2021.2.2</td>
+        <td><a href="https://vjudge.net/contest/420892">点击跳转</a></td>
+        <td>wInTERrOund#TWo(DIVONe)</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>YAOI - Winter Round #2 (Div.2)</td>
+        <td><a href="/user/1">Linshey</a></td>
+        <td>2021.2.2</td>
+        <td><a href="https://vjudge.net/contest/420894">点击跳转</a></td>
+        <td>wintErROuND(DivTWO)#two</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>YAOI - Winter Round #? (Div.1)</td>
+        <td><a href="/user/8">kebingyi</a></td>
+        <td>待定</td>
+        <td>待定</td>
+        <td>待定</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>YAOI - Winter Round #? (Div.2)</td>
+        <td><a href="/user/8">kebingyi</a></td>
+        <td>待定</td>
+        <td>待定</td>
+        <td>待定</td>
+    </tr>
+</tbody>
+</table>
+</div>
+
+<script>
+$('.message .close')
+  .on('click', function() {
+    $(this)
+      .closest('.message')
+      .transition('fade')
+    ;
+  })
+;
+</script>
+
+<% include footer %>

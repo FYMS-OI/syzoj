@@ -35,6 +35,17 @@ app.get('/contests', async (req, res) => {
   }
 });
 
+app.get('/rmt_contest', async (req, res) => {
+  try {
+    res.render('remote_contest', {})
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    });
+  }
+});
+
 app.get('/contest/:id/edit', async (req, res) => {
   try {
     if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');

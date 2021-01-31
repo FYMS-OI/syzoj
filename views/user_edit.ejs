@@ -12,9 +12,9 @@
           <label class="ui teal ribbon label">基础设置</label>
           <div class="field">
             <label for="username">用户名</label>
-            <input type="text" id="username" name="username" value="<%= edited_user.username %>">
-            <div class="ui pointing yellow basic label">
-              2021/1/31日后，用户名将不可被修改！
+            <input type="text" id="username" name="username" value="<%= edited_user.username %>" <% if (!user.allowedManage) { %> readonly<% } %>>
+            <div class="ui pointing red basic label">
+              2021/1/31日后，除管理员外, 用户名不可被修改！
             </div>
           </div>
           <div class="ui two column very relaxed grid">
