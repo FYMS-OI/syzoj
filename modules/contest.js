@@ -7,6 +7,8 @@ let User = syzoj.model('user');
 let Article = syzoj.model('article');
 let FormattedCode = syzoj.model('formatted_code');
 
+let RemoteContest = syzoj.model('remote-contest');
+
 const jwt = require('jsonwebtoken');
 const { getSubmissionInfo, getRoughResult, processOverallResult } = require('../libs/submissions_process');
 
@@ -37,7 +39,16 @@ app.get('/contests', async (req, res) => {
 
 app.get('/rmt_contest', async (req, res) => {
   try {
-    res.render('remote_contest', {})
+    if (!res.locals.user) throw new ErrorMessage('该板块涉及机密, 请登录后继续。', 
+    { '登录': syzoj.utils.makeUrl( ['login'], { 'url': req.originalUrl } ) } );
+    let paginate = syzoj.utils.paginate(await Contest.countForPagination(), req.query.page, syzoj.config.page.contest);
+    let contests = await RemoteContest.queryPage(paginate, {
+      start_time: 'DESC'
+    });
+    res.render('remote_contest', {
+        contests: RemoteContest,
+        paginate: paginate,
+    })
   } catch (e) {
     syzoj.log(e);
     res.render('error', {

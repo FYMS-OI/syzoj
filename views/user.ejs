@@ -17,24 +17,20 @@
   <div class="row">
     <div class="five wide column">
       <div class="ui card" style="width: 100%; " id="user_card">
-        <div class="blurring dimmable image" id="avatar_container">
-          <% if (show_user.allowedEdit) { %>
-          <div class="ui dimmer transition hidden">
-            <div class="content">
-              <div class="center">
-                <a class="ui inverted button" href="<%= syzoj.utils.makeUrl(['user', show_user.id, 'edit']) %>"><i class="edit icon"></i>修改资料</a>
-              </div>
-            </div>
-          </div>
-          <% } %>
+        <div class="image" id="avatar_container">
           <img style="margin-top: -100%; " src="<%= syzoj.utils.gravatar(show_user.email, 1000) %>">
         </div>
+        
         <div class="content">
           <div class="header"><%= show_user.username %><% if(show_user.tg_name && show_user.tg_color) { %><div class="ui <%= show_user.tg_color %> label"><%= show_user.tg_name %></div><% } if (show_user.sex == 1) { %><i class="man icon"></i><% } else if (show_user.sex == -1) { %><i class="woman icon"></i><% } %></div>
           <div class="meta">
             <a class="group"><%= show_user.username == "yan_xiao_an" ? '延小安' : ((show_user.id < 0 || show_user.id == 99927 || show_user.id == 99926) ? '学长的学长' : (show_user.is_admin ? '站长团' : '超级大神犇'))%></a>
           </div>
         </div>
+        
+        <% if (show_user.allowedEdit) { %>
+            <a class="ui fluid button" href="<%= syzoj.utils.makeUrl(['user', show_user.id, 'edit']) %>"><i class="edit icon"></i>修改资料</a>
+        <% } %>
         <div class="extra content">
           <a><i class="check icon"></i>通过 <%= show_user.ac_problems.length %> 题</a>
           <a style="float: right; "><i class="star icon"></i>积分 <%= show_user.rating %></a>
@@ -187,11 +183,6 @@
 </div>
 <script>
 $(function () {
-<% if (show_user.allowedEdit) { %>
-  $('#user_card .image').dimmer({
-  on: 'hover'
-  });
-<% } %>
 
   var pie = new Chart(document.getElementById('pie_chart').getContext('2d'), {
   aspectRatio: 1,
