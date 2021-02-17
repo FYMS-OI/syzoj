@@ -6,14 +6,14 @@
 <script src="<%- lib('semantic-ui/2.4.1/semantic.min.js') %>"></script>
 <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
 
-<div class="ui warning message">
+<div class="ui large warning message">
   <i class="close icon"></i>
   <div class="header">
     该页面暂只支持后端编辑!
   </div>
   点击<a href="https://ecs-workbench.aliyun.com/">这里</a>访问阿里云控制台, 找到<code>/opt/syzoj/web/views/remote_contest.ejs</code>进行更改<br>改完记得重启服务!!!
 </div>
-
+<div class="ui segment">
 <table class="ui very basic center aligned table unstackable">
 <thead>
     <tr>
@@ -76,6 +76,7 @@
     </tr>
 </tbody>
 </table>
+</div>
 </div>
 
 <script>

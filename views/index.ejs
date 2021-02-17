@@ -9,7 +9,7 @@
 <div class="padding">
   <div class="ui three column grid">
     <div class="eleven wide column">
-      <h4 class="ui top attached block header"><i class="ui info icon"></i>公告</h4>
+      <h4 class="ui top attached block header"><i class="fad fa-info"></i>公告</h4>
       <div class="ui bottom attached segment">
         <table class="ui very basic table unstackable">
           <thead>
@@ -28,7 +28,7 @@
           </tbody>
         </table>
       </div>
-      <h4 class="ui top attached block header"><i class="ui signal icon"></i>排名</h4>
+      <h4 class="ui top attached block header"><i class="fad fa-signal-3"></i>排名</h4>
       <div class="ui bottom attached segment">
         <% if (ranklist.length) { %>
         <table class="ui very basic center aligned table unstackable" style="table-layout: fixed; ">
@@ -90,7 +90,7 @@
           let hitokotoTitle = showCustomHitokoto ? syzoj.config.custom_hitokoto.title : syzoj.config.custom_hitokoto.title_original;
           let hitokotoUrl = showCustomHitokoto ? syzoj.utils.makeUrl(['api', 'quote']) : 'https://v1.hitokoto.cn/?c=a';
         %>
-        <h4 class="ui top attached block header"><i class="ui quote left icon"></i><%= hitokotoTitle %></h4>
+        <h4 class="ui top attached block header"><i class="fad fa-quote-left"></i><%= hitokotoTitle %></h4>
         <div id="quote-container" class="ui bottom attached segment">
           <quote-container url="<%= hitokotoUrl %>" :is-custom="<%= JSON.stringify(showCustomHitokoto) %>"></quote-container>
         </div>
@@ -99,7 +99,7 @@
             el: '#quote-container'
           });
         </script>
-      <h4 class="ui top attached block header"><i class="ui rss icon"></i>最近更新</h4>
+      <h4 class="ui top attached block header"><i class="fad fa-rss"></i>最近更新</h4>
       <div class="ui bottom attached segment">
 	<table class="ui very basic center aligned table">
           <thead>
@@ -119,7 +119,7 @@
 	</table>
       </div>
       <% if (todoList) { %>
-      <h4 class="ui top attached block header"><i class="ui tasks icon"></i>任务计划</h4>
+      <h4 class="ui top attached block header"><i class="fad fa-tasks"></i>任务计划</h4>
       <div class="ui bottom attached segment">
           <div class="todo_list">
               <% for (let problem of todoList) { %>
@@ -130,11 +130,11 @@
                       <% if (problem.judge_state.status === 'Accepted') accepted = true; %>
                       <a href="<%= syzoj.utils.makeUrl(['submission', problem.judge_state.id]) %>">
                         <span class="status <%= problem.judge_state.status.toLowerCase().split(' ').join('_') %>">
-                          <i class="<%= icon[problem.judge_state.status] || 'remove' %> icon"></i>
+                          <i class="fad <%= icon[problem.judge_state.status] || 'times' %> fa-fw"></i>
                         </span>
                       </a>
                     <% } else { %>
-                      <i class="minus icon" style="color: #999;"></i>
+                      <i class="fad fa-minus fa-fw" style="color: #999;"></i>
                     <% } %>
                   </div>
                   <div style="text-align: left;">
@@ -226,7 +226,7 @@
             else if (fortune.fortune.indexOf('凶') != -1) color = '#f25e65';
             else color = '#444';
         %>
-        <h4 class="ui top attached block header"><i class="ui magic icon"></i>今日运势</h4>
+        <h4 class="ui top attached block header"><i class="fad fa-magic"></i>今日运势</h4>
         <div class="ui bottom attached segment">
             <div style="height: 15px; "></div>
             <div class="ui two column center aligned padded grid">
@@ -272,7 +272,7 @@
             </div>
         </div>
         <% } %>
-      <h4 class="ui top attached block header"><i class="ui search icon"></i>搜索题目</h4>
+      <h4 class="ui top attached block header"><i class="fad fa-search"></i>搜索题目</h4>
       <div class="ui bottom attached segment">
         <form action="<%= syzoj.utils.makeUrl(['problems', 'search']) %>" method="get">
           <div class="ui search" style="width: 100%; ">
@@ -284,7 +284,7 @@
           </div>
         </form>
       </div>
-      <h4 class="ui top attached block header"><i class="ui calendar icon"></i>近期比赛</h4>
+      <h4 class="ui top attached block header"><i class="fad fa-calendar"></i>近期比赛</h4>
       <div class="ui bottom attached <% if (!contests || !contests.length) { %>center aligned <% } %>segment">
         <% if (!contests || !contests.length) { %>
         还没有举行过任何比赛
@@ -319,7 +319,7 @@
         <% } %>
       </div>
       <% if (typeof links !== 'undefined' && links && links.length) { %>
-      <h4 class="ui top attached block header font-content"><i class="ui linkify icon"></i>友情链接</h4>
+      <h4 class="ui top attached block header font-content"><i class="fad fa-link"></i>友情链接</h4>
       <div class="ui bottom attached segment">
         <ul style="margin: 0; padding-left: 20px; ">
           <% for (let link of links) { %>

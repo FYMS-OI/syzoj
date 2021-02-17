@@ -6,12 +6,12 @@
 <script src="<%- lib('semantic-ui/2.4.1/semantic.min.js') %>"></script>
 <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
 
-<div class="ui warning message">
+<div class="ui large warning message">
   <i class="close icon"></i>
   <div class="header">
     日历功能可能不稳定!
   </div>
-  如果出现异常, 请点击<a href="http://47.110.12.131:9015">此处</a>, 然后进行再次尝试, 若页面显示无法访问, 请联系管理员
+  若页面显示无法访问, 请联系管理员
 </div>
 
 <div class="padding" id="appCalendar">
@@ -40,6 +40,7 @@
     </div>
   </div>
 
+	<div class="ui segment" style="margin-top: 1rem;">
   <table class="ui very basic center aligned table unstackable" style="table-layout: fixed">
     <thead>
       <tr>
@@ -65,6 +66,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 </div>
 
 <script>
