@@ -96,8 +96,8 @@
             <% } %>
             <a class="item<% if (active === '') { %> active<% } %>" href="/"><i class="fal fa-home"></i> 首页</a>
             <a class="item<% if (active.startsWith('problem')) { %> active<% } %>" href="/problems"><i class="fal fa-list"></i> 题库</a>
-            <a class="item<% if (active.startsWith('contest')) { %> active<% } %>" href="/contests"><i class="fal fa-chart-bar"></i> 比赛</a>
-            <a class="item<% if (active.startsWith('rmt_contest')) { %> active<% } %>" href="/rmt_contest"><i class="fal fa-external-link"></i>外链比赛</a>
+            <a class="item<% if (active.startsWith('contest')) { %> active<% } %>" href="/contests"><i class="fal fa-chart-bar"></i>内部比赛</a>
+            <a class="item<% if (active.startsWith('rmt_contest')) { %> active<% } %>" href="/rmt_contest"><i class="fal fa-external-link"></i>远程比赛</a>
             <a class="item<% if (active.startsWith('submission')) { %> active<% } %>" href="/submissions"><i class="fal fa-tasks"></i> 评测</a>
             <a class="item<% if (active.startsWith('ranklist')) { %> active<% } %>" href="/ranklist"><i class="fal fa-signal"></i> 排名</a>
             <a class="item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global"><i class="fal fa-comments"></i> 讨论</a>

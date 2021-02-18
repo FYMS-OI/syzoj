@@ -1,10 +1,31 @@
-<% this.title = 'Remote Contests' %>
+<% this.title = '远程比赛' %>
 <% let panguMode = 'disabled' %>
+
 <% include header %>
 
-<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
-<script src="<%- lib('semantic-ui/2.4.1/semantic.min.js') %>"></script>
-<script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
+<style>
+  input[type=text] {
+    width: 100%;
+    vertical-align: top;
+    font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+    margin: 0;
+    outline: 0;
+    -webkit-appearance: none;
+    tap-highlight-color: rgba(255,255,255,0);
+    line-height: 1.21428571em;
+    padding: .67857143em 1em;
+    font-size: 1em;
+    background: #fff;
+    color: rgba(0,0,0,.87);
+    border: 1px solid rgba(34,36,38,.15);
+    border-radius: .28571429rem;
+    -webkit-box-shadow: 0 0 0 0 transparent inset;
+    box-shadow: 0 0 0 0 transparent inset;
+    -webkit-transition: color .1s ease,border-color .1s ease;
+    transition: color .1s ease,border-color .1s ease;
+}
+
+</style>
 
 <div class="ui large warning message">
   <i class="close icon"></i>
@@ -13,81 +34,107 @@
   </div>
   点击<a href="https://ecs-workbench.aliyun.com/">这里</a>访问阿里云控制台, 找到<code>/opt/syzoj/web/views/remote_contest.ejs</code>进行更改<br>改完记得重启服务!!!
 </div>
-<div class="ui segment">
-<table class="ui very basic center aligned table unstackable">
-<thead>
-    <tr>
-    <th>#</th>
-    <th>比赛名称</th>
-    <th>比赛提供者</th>
-    <th>开始时间</th>
-    <th>链接</th>
-    <th>密码</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td>1</td>
-        <td>YAOI - Winter Round #1 (Div.1)</td>
-        <td><a href="/user/1">Linshey</a></td>
-        <td>2021.2.1</td>
-        <td><a href="https://vjudge.net/contest/420895">点击跳转</a></td>
-        <td>WinTERRouNd#OnE(DivoNe)</td>
-    </tr>
-    <tr>
-        <td>2</td>
-        <td>YAOI - Winter Round #1 (Div.2)</td>
-        <td><a href="/user/1">Linshey</a></td>
-        <td>2021.2.1</td>
-        <td><a href="https://vjudge.net/contest/420893">点击跳转</a></td>
-        <td>WiNtERroUnD#OnE(diVTwO)</td>
-    </tr>
-    <tr>
-        <td>3</td>
-        <td>YAOI - Winter Round #2 (Div.1)</td>
-        <td><a href="/user/1">Linshey</a></td>
-        <td>2021.2.2</td>
-        <td><a href="https://vjudge.net/contest/420892">点击跳转</a></td>
-        <td>wInTERrOund#TWo(DIVONe)</td>
-    </tr>
-    <tr>
-        <td>4</td>
-        <td>YAOI - Winter Round #2 (Div.2)</td>
-        <td><a href="/user/1">Linshey</a></td>
-        <td>2021.2.2</td>
-        <td><a href="https://vjudge.net/contest/420894">点击跳转</a></td>
-        <td>wintErROuND(DivTWO)#two</td>
-    </tr>
-    <tr>
-        <td>5</td>
-        <td>YAOI - Winter Round #? (Div.1)</td>
-        <td><a href="/user/8">kebingyi</a></td>
-        <td>待定</td>
-        <td>待定</td>
-        <td>待定</td>
-    </tr>
-    <tr>
-        <td>6</td>
-        <td>YAOI - Winter Round #? (Div.2)</td>
-        <td><a href="/user/8">kebingyi</a></td>
-        <td>待定</td>
-        <td>待定</td>
-        <td>待定</td>
-    </tr>
-</tbody>
-</table>
-</div>
+<div class="padding">
+  <% if (contests.length) { %>
+    <div class="ui attached segment">
+      <table id="rmtc" class="ui very basic center aligned table unstackable">
+        <thead>
+          <tr>
+            <th>比赛名称</th>
+            <th>比赛提供者</th>
+            <th>开始时间</th>
+            <th>结束时间</th>
+            <th>链接</th>
+            <th>密码</th><% if (user && user.is_admin) { %>
+            <th>操作</th><% } %>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <% for (let contest of contests) { %>
+          <tr>
+            <td id="title">
+              <%= contest.title %>
+              <% if (contest.isEnded()) { %>
+                <span class="ui header"><div class="ui grey mini label">已结束</div></span>
+              <% } else if (contest.isRunning()) { %>
+                <span class="ui header"><div class="ui green mini label">进行中</div></span>
+              <% } else { %>
+                <span class="ui header"><div class="ui red mini label">未开始</div></span>
+              <% } %>
+            </td>
+            <td><a href="<%= syzoj.utils.makeUrl(['user', contest.holder_id]) %>"><%- contest.holder.username %></a></td>
+            <td><%= syzoj.utils.formatDate(contest.start_time) %></td>
+            <td><%= syzoj.utils.formatDate(contest.end_time) %></td>
+            <td><a href="<%- contest.link %>">点击跳转</a></td>
+            <td><%- contest.passwd %></td>
+            <% if (user && user.is_admin) { %>
+            <td id="manage">
+              <div class="ui buttons"><button class="ui circular mini icon button" onclick="popEdit(this.parentNode.parentNode.parentNode)"><i class="ui edit icon"></i></button></div>
+            </td>
+            <script>
+              var origintext;
+              function popEdit(elem) {
+                origintext = elem.innerHTML;
+                elem.innerHTML = "<form class=\"ui form\" id=\"form\" action=\"<%= syzoj.utils.makeUrl(['rmt_contest', contest.id, 'edit']) %> \" method=\"post\">\
+                  <td><input type=\"text\" name=\"title\" value=\"<%= contest.title %>\"></td>\
+                  <td><div class=\"ui selection dropdown\" id=\"holder\">\
+                    <input type=\"hidden\" name=\"holder\" value=\"<%= contest.holder.id %>\">\
+                    <i class=\"dropdown icon\"></i>\
+                    <div class=\"default text\">. . .</div>\
+                    <div class=\"menu\">\
+                    <% for (let holder of admins) { %>\
+                      <div class=\"item\" data-value=\"<%= holder.id %>\">\
+                      <img class=\"ui mini avatar image\" src=\"<%= syzoj.utils.gravatar(holder.email, 1000) %>\">\
+                      <%= holder.username %>\
+                      </div>\
+                    <% } %>\
+                </div></div></td>\
+                  <td><input type=\"text\" name=\"st_time\" value=\"<%= syzoj.utils.formatDate(contest.start_time || syzoj.utils.getCurrentDate()) %>\"></td>\
+                  <td><input type=\"text\" name=\"ed_time\" value=\"<%= syzoj.utils.formatDate(contest.end_time || syzoj.utils.getCurrentDate()) %>\"></td>\
+                  <td><input type=\"text\" name=\"link\" value=\"<%= contest.link %> \"></td>\
+                  <td><input type=\"text\" name=\"passwd\" value=\"<%= contest.passwd %>\"></td>\
+                  <td><div class=\"ui buttons\"><button id=\"submit_button\" type=\"submit\" class=\"ui circular mini green icon button\"><i class=\"ui check icon\"></i></button><button id=\"cancel_button\" type=\"cancel\" onclick=\"Cancel(this.parentNode.parentNode.parentNode)\" class=\"ui circular mini red icon button\"><i class=\"ui remove icon\"></i></button></div></td>\
+                  </form>\
+                ";
+                $(function () {
+                  $('.ui.dropdown:not(.simple)').dropdown();
+                });
+              }
+              function Cancel(elem) {
+                elem.innerHTML = origintext;
+              }
+            </script>
+            <% } %>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+      </div>
+    <% } else { %>
+    <div class="ui placeholder segment">
+      <div class="ui icon header">
+        <i class="calendar icon" style="margin-bottom: 20px; "></i>
+        暂无远程比赛
+      </div>
+    </div>
+    <% } %>
 </div>
 
 <script>
-$('.message .close')
-  .on('click', function() {
-    $(this)
-      .closest('.message')
-      .transition('fade')
-    ;
-  })
-;
+  $('.message .close')
+    .on('click', function() {
+      $(this)
+        .closest('.message')
+        .transition('fade')
+      ;
+    })
+  ;
+</script>
+<script>
+  $(function () {
+    $('.ui.dropdown:not(.simple)').dropdown();
+  });
 </script>
 
 <% include footer %>

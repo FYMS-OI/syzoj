@@ -41,13 +41,17 @@ app.get('/rmt_contest', async (req, res) => {
   try {
     if (!res.locals.user) throw new ErrorMessage('该板块涉及机密, 请登录后继续。', 
     { '登录': syzoj.utils.makeUrl( ['login'], { 'url': req.originalUrl } ) } );
-    let paginate = syzoj.utils.paginate(await Contest.countForPagination(), req.query.page, syzoj.config.page.contest);
+    let paginate = syzoj.utils.paginate(await RemoteContest.countForPagination(), req.query.page, syzoj.config.page.contest);
     let contests = await RemoteContest.queryPage(paginate, {
       start_time: 'DESC'
     });
+    await contests.forEachAsync(async x => x.loadRelationships());
+    let query = await User.createQueryBuilder();
+    let admins = await User.queryAll(query);
     res.render('remote_contest', {
-        contests: RemoteContest,
-        paginate: paginate,
+      contests: contests,
+      paginate: paginate,
+      admins: admins
     })
   } catch (e) {
     syzoj.log(e);

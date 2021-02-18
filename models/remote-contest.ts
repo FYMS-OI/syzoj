@@ -32,6 +32,10 @@ export default class RemoteContest extends Model {
 
   holder?: User;
 
+  async loadRelationships() {
+    this.holder = await User.findById(this.holder_id);
+  }
+
   isRunning(now?) {
     if (!now) now = syzoj.utils.getCurrentDate();
     return now >= this.start_time && now < this.end_time;
