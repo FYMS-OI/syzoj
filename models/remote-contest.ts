@@ -11,20 +11,20 @@ export default class RemoteContest extends Model {
   @TypeORM.PrimaryGeneratedColumn()
   id: number;
 
-  @TypeORM.Column({ nullable: true, type: "varchar", length: 80 })
+  @TypeORM.Column({ type: "varchar", length: 80 })
   title: string;
 
-  @TypeORM.Column({ nullable: true, type: "integer" })
+  @TypeORM.Column({ type: "integer" })
   start_time: number;
 
-  @TypeORM.Column({ nullable: true, type: "integer" })
+  @TypeORM.Column({ type: "integer" })
   end_time: number;
 
   @TypeORM.Index()
-  @TypeORM.Column({ nullable: true, type: "integer" })
+  @TypeORM.Column({ type: "integer" })
   holder_id: number;
 
-  @TypeORM.Column({ nullable: true, type: "text" })
+  @TypeORM.Column({ type: "text" })
   link: string;
 
   @TypeORM.Column({ nullable: true, type: "text" })

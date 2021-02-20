@@ -37,7 +37,7 @@ app.get('/contests', async (req, res) => {
   }
 });
 
-app.get('/rmt_contest', async (req, res) => {
+app.get('/rmt_contests', async (req, res) => {
   try {
     if (!res.locals.user) throw new ErrorMessage('该板块涉及机密, 请登录后继续。', 
     { '登录': syzoj.utils.makeUrl( ['login'], { 'url': req.originalUrl } ) } );
@@ -53,6 +53,39 @@ app.get('/rmt_contest', async (req, res) => {
       paginate: paginate,
       admins: admins
     })
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    });
+  }
+});
+
+app.post('/rmt_contest/:id/edit', async (req, res) => {
+  try {
+    if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
+
+    let contest_id = parseInt(req.params.id);
+    let contest = await Contest.findById(contest_id);
+    if (!contest) {
+      contest = await Contest.create();
+      contest.id = 0;
+    } else {
+      await contest.loadRelationships();
+    }
+
+    if (!req.body.title.trim()) throw new ErrorMessage('比赛名不能为空。');
+    if (!req.body.link.trim()) throw new ErrorMessage('比赛链接不能为空。');
+    contest.title = req.body.title;
+    contest.holder_id = req.body.holder_id;
+    contest.start_time = syzoj.utils.parseDate(req.body.start_time);
+    contest.end_time = syzoj.utils.parseDate(req.body.end_time);
+    contest.link = req.body.link;
+    contest.passwd = req.body.passwd;
+
+    await contest.save();
+
+    res.redirect(syzoj.utils.makeUrl(['rmt_contests']));
   } catch (e) {
     syzoj.log(e);
     res.render('error', {

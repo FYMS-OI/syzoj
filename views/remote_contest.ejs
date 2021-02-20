@@ -27,16 +27,64 @@
 
 </style>
 
-<div class="ui large warning message">
-  <i class="close icon"></i>
-  <div class="header">
-    该页面暂只支持后端编辑!
-  </div>
-  点击<a href="https://ecs-workbench.aliyun.com/">这里</a>访问阿里云控制台, 找到<code>/opt/syzoj/web/views/remote_contest.ejs</code>进行更改<br>改完记得重启服务!!!
-</div>
 <div class="padding">
+  <% if (user && user.is_admin) { %>
+  <div class="ui styled fluid accordion">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      新建比赛
+    </div>
+    <div class="content">
+      <form action="<%=syzoj.utils.makeUrl(['rmt_contest', 0, 'edit']) %>"
+        method="post">
+        <div class="ui form">
+          <div class="fields">
+            <div class="field">
+              <label>比赛名称</label>
+              <input type="text" name="title">
+            </div>
+            <div class="field">
+              <label>比赛提供者</label>
+              <div class="ui selection dropdown" id="holder">
+                <input type="hidden" name="holder_id" value="1">
+                <i class="dropdown icon"></i>
+                <div class="default text">. . .</div>
+                <div class="menu">
+                  <% for (let holder of admins) { %>
+                    <div class="item" data-value="<%= holder.id %>">
+                      <img class="ui mini avatar image" src="<%= syzoj.utils.gravatar(holder.email, 1000) %>">
+                      <%= holder.username %>
+                    </div>
+                    <% } %>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>开始时间</label>
+              <input type="text" name="start_time" value="<%= syzoj.utils.formatDate(syzoj.utils.getCurrentDate()) %>">
+            </div>
+            <div class="field">
+              <label>结束时间</label>
+              <input type="text" name="end_time" value="<%= syzoj.utils.formatDate(syzoj.utils.getCurrentDate()) %>">
+            </div>
+            <div class="field">
+              <label>比赛链接</label>
+              <input type="text" name="link">
+            </div>
+            <div class="field">
+              <label>密码（可选）</label>
+              <input type="text" name="passwd">
+            </div>
+          </div>
+          <div style="text-align: right; "><button id="submit_button" type="submit" class="ui labeled icon blue button"><i
+                class="ui edit icon"></i>提交</button></div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
   <% if (contests.length) { %>
-    <div class="ui attached segment">
+    <div class="ui attached segment" style="margin-top: 1rem;">
       <table id="rmtc" class="ui very basic center aligned table unstackable">
         <thead>
           <tr>
@@ -79,7 +127,7 @@
                 elem.innerHTML = "<form class=\"ui form\" id=\"form\" action=\"<%= syzoj.utils.makeUrl(['rmt_contest', contest.id, 'edit']) %> \" method=\"post\">\
                   <td><input type=\"text\" name=\"title\" value=\"<%= contest.title %>\"></td>\
                   <td><div class=\"ui selection dropdown\" id=\"holder\">\
-                    <input type=\"hidden\" name=\"holder\" value=\"<%= contest.holder.id %>\">\
+                    <input type=\"hidden\" name=\"holder_id\" value=\"<%= contest.holder.id %>\">\
                     <i class=\"dropdown icon\"></i>\
                     <div class=\"default text\">. . .</div>\
                     <div class=\"menu\">\
@@ -90,15 +138,18 @@
                       </div>\
                     <% } %>\
                 </div></div></td>\
-                  <td><input type=\"text\" name=\"st_time\" value=\"<%= syzoj.utils.formatDate(contest.start_time || syzoj.utils.getCurrentDate()) %>\"></td>\
-                  <td><input type=\"text\" name=\"ed_time\" value=\"<%= syzoj.utils.formatDate(contest.end_time || syzoj.utils.getCurrentDate()) %>\"></td>\
+                  <td><input type=\"text\" name=\"start_time\" value=\"<%= syzoj.utils.formatDate(contest.start_time || syzoj.utils.getCurrentDate()) %>\"></td>\
+                  <td><input type=\"text\" name=\"end_time\" value=\"<%= syzoj.utils.formatDate(contest.end_time || syzoj.utils.getCurrentDate()) %>\"></td>\
                   <td><input type=\"text\" name=\"link\" value=\"<%= contest.link %> \"></td>\
                   <td><input type=\"text\" name=\"passwd\" value=\"<%= contest.passwd %>\"></td>\
-                  <td><div class=\"ui buttons\"><button id=\"submit_button\" type=\"submit\" class=\"ui circular mini green icon button\"><i class=\"ui check icon\"></i></button><button id=\"cancel_button\" type=\"cancel\" onclick=\"Cancel(this.parentNode.parentNode.parentNode)\" class=\"ui circular mini red icon button\"><i class=\"ui remove icon\"></i></button></div></td>\
+                  <td><div class=\"ui buttons\"><button id=\"submit_button2\" type=\"submit\" class=\"ui circular mini green icon button\"><i class=\"ui check icon\"></i></button><button id=\"cancel_button\" type=\"cancel\" onclick=\"Cancel(this.parentNode.parentNode.parentNode)\" class=\"ui circular mini icon button\"><i class=\"ui undo icon\"></i></button></div></td>\
                   </form>\
                 ";
                 $(function () {
                   $('.ui.dropdown:not(.simple)').dropdown();
+                });
+                $("#submit_button2").on("click", function () {
+                    $("#form").submit();
                 });
               }
               function Cancel(elem) {
@@ -134,6 +185,7 @@
 <script>
   $(function () {
     $('.ui.dropdown:not(.simple)').dropdown();
+    $('.ui.accordion').accordion();
   });
 </script>
 
