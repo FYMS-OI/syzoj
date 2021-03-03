@@ -98,7 +98,6 @@
           </tr>
         </thead>
         <tbody>
-          
           <% for (let contest of contests) { %>
           <tr>
             <td id="title">
@@ -117,45 +116,72 @@
             <td><a href="<%- contest.link %>">点击跳转</a></td>
             <td><%- contest.passwd %></td>
             <% if (user && user.is_admin) { %>
+            <div class="ui basic modal" id="modal-edit<%= contest.id %>">
+              <div class="ui icon header">
+                <i class="edit icon"></i>
+                编辑第 <%= contest.id %> 场远程比赛
+              </div>
+              <div class="content">
+                <form action="<%=syzoj.utils.makeUrl(['rmt_contest', contest.id, 'edit']) %>" method="post" id="form<%= contest.id %>">
+                  <div class="ui form">
+                    <div class="fields">
+                      <div class="field">
+                        <label>比赛名称</label>
+                        <input type="text" name="title" value="<%= contest.title %>">
+                      </div>
+                      <div class="field">
+                        <label>比赛提供者</label>
+                        <div class="ui selection dropdown" id="holder">
+                          <input type="hidden" name="holder_id" value="<%= contest.holder_id %>">
+                          <i class="dropdown icon"></i>
+                          <div class="menu">
+                            <% for (let holder of admins) { %>
+                              <div class="item" data-value="<%= holder.id %>">
+                                <img class="ui mini avatar image" src="<%= syzoj.utils.gravatar(holder.email, 1000) %>">
+                                <%= holder.username %>
+                              </div>
+                              <% } %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="field">
+                        <label>开始时间</label>
+                        <input type="text" name="start_time"
+                          value="<%= syzoj.utils.formatDate(contest.start_time || syzoj.utils.getCurrentDate()) %>">
+                      </div>
+                      <div class="field">
+                        <label>结束时间</label>
+                        <input type="text" name="end_time"
+                          value="<%= syzoj.utils.formatDate(contest.end_time || syzoj.utils.getCurrentDate()) %>">
+                      </div>
+                      <div class="field">
+                        <label>比赛链接</label>
+                        <input type="text" name="link" value="<%= contest.link %>">
+                      </div>
+                      <div class="field">
+                        <label>密码（可选）</label>
+                        <input type="text" name="passwd" value="<%= contest.passwd %>">
+                      </div>
+                    </div>
+                    </div>
+                  </form>
+                </div>
+              <div class="actions">
+                <div class="ui red basic cancel inverted button">
+                  <i class="logout icon"></i>
+                  取消
+                </div>
+                <div class="ui green ok inverted button">
+                  <i class="checkmark icon" onclick="$('#form<%= contest.id %>').submit()"></i>
+                  确定
+                </div>
+              </div>
+            </div>
             <td id="manage">
-              <div class="ui buttons"><button class="ui circular mini icon button" onclick="popEdit(this.parentNode.parentNode.parentNode)"><i class="ui edit icon"></i></button></div>
+              <div class="ui buttons"><button class="ui circular mini icon button" onclick="$('#modal-edit<%= contest.id %>').modal('show')"><i class="ui edit icon"></i></button></div>
             </td>
-            <script>
-              var origintext;
-              function popEdit(elem) {
-                origintext = elem.innerHTML;
-                elem.innerHTML = "<form class=\"ui form\" id=\"form\" action=\"<%= syzoj.utils.makeUrl(['rmt_contest', contest.id, 'edit']) %> \" method=\"post\">\
-                  <td><input type=\"text\" name=\"title\" value=\"<%= contest.title %>\"></td>\
-                  <td><div class=\"ui selection dropdown\" id=\"holder\">\
-                    <input type=\"hidden\" name=\"holder_id\" value=\"<%= contest.holder.id %>\">\
-                    <i class=\"dropdown icon\"></i>\
-                    <div class=\"default text\">. . .</div>\
-                    <div class=\"menu\">\
-                    <% for (let holder of admins) { %>\
-                      <div class=\"item\" data-value=\"<%= holder.id %>\">\
-                      <img class=\"ui mini avatar image\" src=\"<%= syzoj.utils.gravatar(holder.email, 1000) %>\">\
-                      <%= holder.username %>\
-                      </div>\
-                    <% } %>\
-                </div></div></td>\
-                  <td><input type=\"text\" name=\"start_time\" value=\"<%= syzoj.utils.formatDate(contest.start_time || syzoj.utils.getCurrentDate()) %>\"></td>\
-                  <td><input type=\"text\" name=\"end_time\" value=\"<%= syzoj.utils.formatDate(contest.end_time || syzoj.utils.getCurrentDate()) %>\"></td>\
-                  <td><input type=\"text\" name=\"link\" value=\"<%= contest.link %> \"></td>\
-                  <td><input type=\"text\" name=\"passwd\" value=\"<%= contest.passwd %>\"></td>\
-                  <td><div class=\"ui buttons\"><button id=\"submit_button2\" type=\"submit\" class=\"ui circular mini green icon button\"><i class=\"ui check icon\"></i></button><button id=\"cancel_button\" type=\"cancel\" onclick=\"Cancel(this.parentNode.parentNode.parentNode)\" class=\"ui circular mini icon button\"><i class=\"ui undo icon\"></i></button></div></td>\
-                  </form>\
-                ";
-                $(function () {
-                  $('.ui.dropdown:not(.simple)').dropdown();
-                });
-                $("#submit_button2").on("click", function () {
-                    $("#form").submit();
-                });
-              }
-              function Cancel(elem) {
-                elem.innerHTML = origintext;
-              }
-            </script>
+            
+            
             <% } %>
           </tr>
           <% } %>

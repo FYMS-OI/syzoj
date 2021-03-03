@@ -15,7 +15,7 @@ const { getSubmissionInfo, getRoughResult, processOverallResult } = require('../
 app.get('/contests', async (req, res) => {
   try {
     let where;
-    if (res.locals.user && res.locals.user.is_admin) where = {}
+    if (res.locals.user && res.locals.user.is_admin) where = {};
     else where = { is_public: true };
 
     let paginate = syzoj.utils.paginate(await Contest.countForPagination(where), req.query.page, syzoj.config.page.contest);
@@ -42,7 +42,8 @@ app.get('/rmt_contests', async (req, res) => {
     if (!res.locals.user) throw new ErrorMessage('该板块涉及机密, 请登录后继续。', 
     { '登录': syzoj.utils.makeUrl( ['login'], { 'url': req.originalUrl } ) } );
     let paginate = syzoj.utils.paginate(await RemoteContest.countForPagination(), req.query.page, syzoj.config.page.contest);
-    let contests = await RemoteContest.queryPage(paginate, {
+    let where = {};
+    let contests = await RemoteContest.queryPage(paginate, where, {
       start_time: 'DESC'
     });
     await contests.forEachAsync(async x => x.loadRelationships());
@@ -66,10 +67,9 @@ app.post('/rmt_contest/:id/edit', async (req, res) => {
     if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
 
     let contest_id = parseInt(req.params.id);
-    let contest = await Contest.findById(contest_id);
+    let contest = await RemoteContest.findById(contest_id);
     if (!contest) {
-      contest = await Contest.create();
-      contest.id = 0;
+      contest = await RemoteContest.create();
     } else {
       await contest.loadRelationships();
     }
